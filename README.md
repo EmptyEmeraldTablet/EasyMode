@@ -36,8 +36,8 @@ Steam/steamapps/common/The Binding of Isaac Rebirth/mods/EasyModeMod/
 
 ```
 EasyModeMod/
-├── main.lua          # 模组入口和配置
-├── mod.lua           # 主逻辑实现
+├── main.lua          # 模组主文件（单一文件结构）
+├── metadata.xml      # 模组描述文件
 └── README.md         # 本文件
 ```
 
