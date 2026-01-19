@@ -7,7 +7,7 @@ Features:
 - Enemy movement speed reduced by 40%
 - Boss movement speed reduced by 15%
 - Enemy projectile speed reduced by 40%
-- Trap damage reduced by 30-50%
+- ~~Trap damage reduced by 30-50%~~ (Removed - damage is integer and cannot be scaled)
 - Does NOT affect player attributes
 - Friendly units and familiars are unaffected
 

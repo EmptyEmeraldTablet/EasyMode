@@ -24,10 +24,7 @@ function EasyMode:GetConfig()
         PROJECTILE_SPEED_FACTOR = 0.6,
         TEAR_SPEED_FACTOR = 0.6,
         ATTACK_COOLDOWN_MULTIPLIER = 1.5,
-        SPIKE_DAMAGE_MULTIPLIER = 0.5,
-        EXPLOSION_DAMAGE_MULTIPLIER = 0.4,
-        FIRE_DAMAGE_MULTIPLIER = 0.7,
-        ENABLE_TRAP_MODIFICATION = true,
+        ENABLE_TRAP_MODIFICATION = false,
         EXCLUDE_FRIENDLY = true,
         EXCLUDE_FAMILIARS = true,
         ENABLE_ATTACK_SLOWDOWN = false
@@ -208,27 +205,10 @@ function EasyMode:onTearUpdate(tear)
 end
 
 function EasyMode:onEntityTakeDamage(entity, damage, flags, source, countdown)
-    -- 陷阱伤害减免
-    local config = self:GetConfig()
-    
-    if not config.ENABLE_TRAP_MODIFICATION then
-        return nil
-    end
-    
-    local newDamage = damage
-    
-    -- 尖刺伤害
-    if flags & DamageFlag.DAMAGE_SPIKES ~= 0 then
-        newDamage = damage * config.SPIKE_DAMAGE_MULTIPLIER
-    -- 爆炸伤害
-    elseif flags & DamageFlag.DAMAGE_EXPLOSION ~= 0 then
-        newDamage = damage * config.EXPLOSION_DAMAGE_MULTIPLIER
-    -- 火焰伤害
-    elseif flags & DamageFlag.DAMAGE_FIRE ~= 0 then
-        newDamage = damage * config.FIRE_DAMAGE_MULTIPLIER
-    end
-    
-    return newDamage
+    -- 陷阱伤害处理已禁用
+    -- 游戏伤害为整数（1-2点），无法简单使用倍率缩减
+    -- 伤害修改功能保持禁用状态
+    return nil
 end
 
 function EasyMode:onRoomUpdate()
@@ -246,7 +226,7 @@ function EasyMode:Init()
         { ModCallbacks.MC_NPC_UPDATE, self.onNPCUpdate },
         { ModCallbacks.MC_POST_PROJECTILE_UPDATE, self.onProjectileUpdate },
         { ModCallbacks.MC_POST_TEAR_UPDATE, self.onTearUpdate },
-        { ModCallbacks.MC_ENTITY_TAKE_DMG, self.onEntityTakeDamage },
+        -- 伤害修改回调已移除（伤害为整数无法简单缩减）
         { ModCallbacks.MC_POST_UPDATE, self.onRoomUpdate }
     }
     

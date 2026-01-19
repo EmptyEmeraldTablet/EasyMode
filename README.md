@@ -10,15 +10,13 @@
 - **敌对投射物速度**: 默认降低 40%
 - **敌对眼泪速度**: 默认降低 40%
 
-### 伤害控制
-- **尖刺伤害**: 降低 50%
-- **爆炸伤害**: 降低 60%
-- **火焰伤害**: 降低 30%
-
 ### 特殊规则
 - 玩家和玩家跟随物不受影响
 - 友好单位（被魅惑的敌人）不受影响
 - 投射物降低速度后自动调整存活时间以保持相同射程
+
+### 伤害控制（已移除）
+> ⚠️ 伤害控制功能已移除。游戏伤害为整数（1-2点），无法简单使用倍率缩减。
 
 ## 安装方法
 
@@ -54,14 +52,13 @@ EasyMode.Config = {
     PROJECTILE_SPEED_FACTOR = 0.6,      -- 投射物速度
     TEAR_SPEED_FACTOR = 0.6,            -- 眼泪速度
     ATTACK_COOLDOWN_MULTIPLIER = 1.5,   -- 攻击冷却倍数
-    SPIKE_DAMAGE_MULTIPLIER = 0.5,      -- 尖刺伤害
-    EXPLOSION_DAMAGE_MULTIPLIER = 0.4,  -- 爆炸伤害
-    FIRE_DAMAGE_MULTIPLIER = 0.7,       -- 火焰伤害
-    ENABLE_TRAP_MODIFICATION = true,    -- 启用陷阱修改
+    ENABLE_TRAP_MODIFICATION = false,   -- 启用陷阱修改（已禁用，伤害为整数无法简单缩减）
     EXCLUDE_FRIENDLY = true,            -- 豁免友好单位
     EXCLUDE_FAMILIARS = true            -- 豁免跟随物
 }
 ```
+
+> ⚠️ 注意：伤害倍率配置已移除。游戏伤害为整数（1-2点），无法简单使用倍率缩减。
 
 ## 技术说明
 
@@ -71,7 +68,7 @@ EasyMode.Config = {
 
 1. `MC_NPC_UPDATE` - 控制敌人移动速度
 2. `MC_POST_PROJECTILE_UPDATE` - 控制投射物速度并调整射程
-3. `MC_ENTITY_TAKE_DMG` - 减少陷阱伤害
+3. `MC_ENTITY_TAKE_DMG` - ~~减少陷阱伤害~~（已移除，伤害为整数无法简单缩减）
 
 ### 性能优化
 

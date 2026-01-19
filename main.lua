@@ -14,10 +14,7 @@ EasyMode.Config = {
     PROJECTILE_SPEED_FACTOR = 0.6,   -- 敌对投射物速度
     TEAR_SPEED_FACTOR = 0.6,         -- 敌对眼泪速度
     ATTACK_COOLDOWN_MULTIPLIER = 1.5, -- 攻击冷却增加倍数
-    SPIKE_DAMAGE_MULTIPLIER = 0.5,   -- 尖刺伤害倍率
-    EXPLOSION_DAMAGE_MULTIPLIER = 0.4, -- 爆炸伤害倍率
-    FIRE_DAMAGE_MULTIPLIER = 0.7,    -- 火焰伤害倍率
-    ENABLE_TRAP_MODIFICATION = true,  -- 是否修改陷阱伤害
+    ENABLE_TRAP_MODIFICATION = false, -- 是否修改陷阱伤害（已禁用，伤害为整数无法简单缩减）
     EXCLUDE_FRIENDLY = true,         -- 豁免友好单位
     EXCLUDE_FAMILIARS = true,        -- 豁免跟随物
     ENABLE_ATTACK_SLOWDOWN = false   -- 是否启用攻击减速（实验性功能）
@@ -52,9 +49,7 @@ function EasyMode:printConfig()
     print(string.format("Boss速度因子: %.2f", EasyMode.Config.BOSS_SPEED_FACTOR))
     print(string.format("投射物速度因子: %.2f", EasyMode.Config.PROJECTILE_SPEED_FACTOR))
     print(string.format("攻击冷却倍数: %.2f", EasyMode.Config.ATTACK_COOLDOWN_MULTIPLIER))
-    print(string.format("尖刺伤害倍率: %.2f", EasyMode.Config.SPIKE_DAMAGE_MULTIPLIER))
-    print(string.format("爆炸伤害倍率: %.2f", EasyMode.Config.EXPLOSION_DAMAGE_MULTIPLIER))
-    print(string.format("火焰伤害倍率: %.2f", EasyMode.Config.FIRE_DAMAGE_MULTIPLIER))
+    print(string.format("陷阱伤害修改: %s", EasyMode.Config.ENABLE_TRAP_MODIFICATION and "已启用" or "已禁用"))
     print("============================")
 end
 
