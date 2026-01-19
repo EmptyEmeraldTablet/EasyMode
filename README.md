@@ -5,10 +5,10 @@
 ## 功能特性
 
 ### 速度控制
-- **敌人移动速度**: 默认降低 40%
-- **Boss移动速度**: 默认降低 15%
-- **敌对投射物速度**: 默认降低 40%
-- **敌对眼泪速度**: 默认降低 40%
+- **敌人移动速度**: 默认降低 60% (速度因子 0.4)
+- **Boss移动速度**: 默认降低 30% (速度因子 0.7)
+- **敌对投射物速度**: 默认降低 50% (速度因子 0.5)
+- **敌对眼泪速度**: 默认降低 50% (速度因子 0.5)
 
 ### 特殊规则
 - 玩家和玩家跟随物不受影响
@@ -36,9 +36,10 @@ Steam/steamapps/common/The Binding of Isaac Rebirth/mods/EasyModeMod/
 
 ```
 EasyModeMod/
-├── main.lua          # 模组主文件（单一文件结构）
-├── metadata.xml      # 模组描述文件
-└── README.md         # 本文件
+├── main.lua              # 模组主文件（单一文件结构）
+├── metadata.xml          # 模组描述文件
+├── README.md             # 说明文档
+└── DEVELOPMENT_NOTES.md  # 开发笔记（问题与解决方案）
 ```
 
 ## 配置说明
@@ -47,18 +48,15 @@ EasyModeMod/
 
 ```lua
 EasyMode.Config = {
-    ENEMY_SPEED_FACTOR = 0.6,           -- 敌人速度 (0.6 = 60% 原始速度)
-    BOSS_SPEED_FACTOR = 0.85,           -- Boss速度
-    PROJECTILE_SPEED_FACTOR = 0.6,      -- 投射物速度
-    TEAR_SPEED_FACTOR = 0.6,            -- 眼泪速度
-    ATTACK_COOLDOWN_MULTIPLIER = 1.5,   -- 攻击冷却倍数
-    ENABLE_TRAP_MODIFICATION = false,   -- 启用陷阱修改（已禁用，伤害为整数无法简单缩减）
-    EXCLUDE_FRIENDLY = true,            -- 豁免友好单位
-    EXCLUDE_FAMILIARS = true            -- 豁免跟随物
+    ENEMY_SPEED_FACTOR = 0.4,        -- 敌人速度 (0.4 = 40% 原始速度，即降低60%)
+    BOSS_SPEED_FACTOR = 0.7,         -- Boss速度 (0.7 = 70% 原始速度，即降低30%)
+    PROJECTILE_SPEED_FACTOR = 0.5,   -- 投射物速度 (0.5 = 50% 原始速度，即降低50%)
+    TEAR_SPEED_FACTOR = 0.5,         -- 眼泪速度 (0.5 = 50% 原始速度，即降低50%)
+    ATTACK_COOLDOWN_MULTIPLIER = 1.5,-- 攻击冷却倍数
+    EXCLUDE_FRIENDLY = true,         -- 豁免友好单位
+    EXCLUDE_FAMILIARS = true         -- 豁免跟随物
 }
 ```
-
-> ⚠️ 注意：伤害倍率配置已移除。游戏伤害为整数（1-2点），无法简单使用倍率缩减。
 
 ## 技术说明
 
@@ -66,15 +64,15 @@ EasyMode.Config = {
 
 模组通过以下回调实现功能：
 
-1. `MC_NPC_UPDATE` - 控制敌人移动速度
-2. `MC_POST_PROJECTILE_UPDATE` - 控制投射物速度并调整射程
-3. `MC_ENTITY_TAKE_DMG` - ~~减少陷阱伤害~~（已移除，伤害为整数无法简单缩减）
+1. `MC_POST_UPDATE` - 每帧扫描房间内所有实体并减速敌人和投射物
+2. 使用 `Isaac.GetRoomEntities()` 获取房间内所有实体
+3. 使用 `entity:ToNPC()` 检测敌人（比 `IsActiveEnemy()` 更可靠）
 
 ### 性能优化
 
-- 使用弱表缓存已处理实体，减少重复计算
-- 忽略静止实体以减少不必要的计算
-- 使用实体标志进行快速过滤
+- 忽略静止实体（速度 < 0.5）以减少不必要的计算
+- 使用实体类型检查快速过滤非敌人实体
+- 代码简洁高效，无冗余日志输出
 
 ### 兼容性
 
