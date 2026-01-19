@@ -130,8 +130,8 @@ local function onPostUpdate()
                 npcCount + projectileTypeCount + tearTypeCount + otherCount, eType, eVariant, eSubType, tostring(eValid)))
         end
         
-        -- Process enemies
-        if npc and eValid then
+        -- Process enemies - FIX: Use ~= false instead of truthy check
+        if npc and (eValid ~= false) then
             enemyCount = enemyCount + 1
             
             -- Get velocity
@@ -156,8 +156,8 @@ local function onPostUpdate()
                 enemyCount, speed, speed * factor, factor))
         end
 
-        -- Process enemy projectiles
-        if eType == EntityType.ENTITY_PROJECTILE and eValid then
+        -- Process enemy projectiles - FIX: Use ~= false
+        if eType == EntityType.ENTITY_PROJECTILE and (eValid ~= false) then
             projectileCount = projectileCount + 1
             
             local velocity = entity.Velocity
