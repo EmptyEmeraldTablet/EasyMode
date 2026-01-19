@@ -185,6 +185,9 @@ local function onProjectileUpdate(projectile)
 end
 
 local function onTearUpdate(tear)
+    -- 检查 tear 是否存在
+    if not tear then return end
+
     -- 检查是否是敌对眼泪
     if tear.SpawnerType == EntityType.ENTITY_PLAYER then
         return  -- 玩家眼泪，不处理
