@@ -1,6 +1,6 @@
 -- Easy Mode Mod for The Binding of Isaac: Repentance
--- 此模组通过降低敌人速度、投射物速度来降低游戏难度
--- 不影响玩家属性，伤害控制因游戏伤害为整数已移除
+-- This mod reduces game difficulty by slowing down enemies and projectiles
+-- Does not affect player attributes
 
 local EasyMode = RegisterMod("Easy Mode", 1)
 
@@ -216,7 +216,7 @@ local function onTearUpdate(tear)
     -- 检查是否是敌对眼泪
     if spawnerType == EntityType.ENTITY_PLAYER then
         print("[DEBUG] Player tear, skipping")
-        return  -- 玩家眼泪，不处理
+        return  -- Player tear, skip
     end
 
     if spawnerType and spawnerType >= 10 then
@@ -230,8 +230,8 @@ local function onTearUpdate(tear)
 end
 
 local function onRoomUpdate()
-    -- 房间级别的更新逻辑
-    -- 可以用于清理已移除的投射物数据
+    -- Room-level update logic
+    -- Can be used to clean up removed projectile data
 end
 
 -- ============================================================================
@@ -258,8 +258,8 @@ local function Init()
     processedEntities = {}
     projectileData = {}
 
-    print("[EasyMode] 模组已加载 - 游戏难度已降低")
-    print(string.format("[EasyMode] 敌人速度: %.0f%%, 投射物速度: %.0f%%",
+    print("[EasyMode] Mod loaded - game difficulty reduced")
+    print(string.format("[EasyMode] Enemy speed: %.0f%%, Projectile speed: %.0f%%",
         EasyMode.Config.ENEMY_SPEED_FACTOR * 100,
         EasyMode.Config.PROJECTILE_SPEED_FACTOR * 100))
 end
