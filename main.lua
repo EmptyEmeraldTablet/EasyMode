@@ -30,10 +30,22 @@ local projectileData = setmetatable({}, {__mode = "k"})
 -- Entity type check functions
 -- ============================================================================
 
-local function isActiveEnemy(entity)
-    -- Use the game's built-in enemy detection
+local function isEnemyNPC(entity)
+    -- Check if entity is an enemy NPC
     if not entity then return false end
-    return entity:IsActiveEnemy(false) and entity:IsVulnerableEnemy()
+    
+    -- Try to convert to NPC
+    local npc = entity:ToNPC()
+    if not npc then return false end
+    
+    -- Skip if not a valid enemy type (Types 10-999 are enemies, 1000 is effect)
+    local etype = entity.Type
+    if etype < 10 or etype == 1000 then return false end
+    
+    -- Skip dead entities
+    if npc:IsDead() then return false end
+    
+    return true
 end
 
 local function isEnemyProjectile(entity)
@@ -47,9 +59,8 @@ local function isEnemyProjectile(entity)
         return true
     end
 
-    -- Check tear type
+    -- Check tear type - player tears have SpawnerType == ENTITY_PLAYER
     if entity.Type == EntityType.ENTITY_TEAR then
-        -- Player tears have SpawnerType == ENTITY_PLAYER
         if entity.SpawnerType ~= EntityType.ENTITY_PLAYER then
             return true  -- Enemy tear
         end
@@ -92,76 +103,82 @@ local function onPostUpdate()
             goto continue
         end
 
-        -- Process enemies
-        if isActiveEnemy(entity) then
-            local npc = entity:ToNPC()
-            if npc then
-                enemyCount = enemyCount + 1
-                print(string.format("[DEBUG] Found enemy #%d: Type=%d, Variant=%d", 
-                    enemyCount, entity.Type, entity.Variant))
-
-                -- Skip friendly/familiar
-                if isFriendlyOrFamiliar(npc) then
-                    print("[DEBUG] Skipping friendly/familiar")
-                    goto continue
-                end
-
-                -- Skip dead entities
-                if npc:IsDead() then
-                    print("[DEBUG] Skipping dead entity")
-                    goto continue
-                end
-
-                -- Get velocity
-                local velocity = npc.Velocity
-                local speed = velocity:Length()
-                print(string.format("[DEBUG] Enemy speed before: %.2f", speed))
-
-                -- Skip stationary entities
-                if speed < 0.5 then
-                    print("[DEBUG] Speed too low, skipping")
-                    goto continue
-                end
-
-                -- Apply speed reduction
-                local factor = EasyMode.Config.ENEMY_SPEED_FACTOR
-                if npc:IsBoss() then
-                    factor = EasyMode.Config.BOSS_SPEED_FACTOR
-                    print("[DEBUG] Entity is Boss, using BOSS_SPEED_FACTOR")
-                end
-
-                npc.Velocity = velocity * factor
-                print(string.format("[DEBUG] Applied factor %.2f, new velocity: (%.2f, %.2f)", 
-                    factor, npc.Velocity.X, npc.Velocity.Y))
-
-                processedEntities[npc] = true
+        -- Process enemies - use ToNPC() check first (most reliable)
+        local npc = entity:ToNPC()
+        if npc then
+            print(string.format("[DEBUG] Entity #%d: Type=%d, Variant=%d, ToNPC()=SUCCESS", 
+                enemyCount + 1, entity.Type, entity.Variant))
+            
+            -- Verify it's an enemy (Type >= 10 and != 1000)
+            local etype = entity.Type
+            if etype < 10 or etype == 1000 then
+                print(string.format("[DEBUG] Not enemy type (Type=%d), skipping", etype))
+                goto continue
             end
-        end
 
-        -- Process enemy projectiles
-        if isEnemyProjectile(entity) then
-            projectileCount = projectileCount + 1
-            print(string.format("[DEBUG] Found enemy projectile #%d: Type=%d, SpawnerType=%d", 
-                projectileCount, entity.Type, entity.SpawnerType or -1))
+            enemyCount = enemyCount + 1
+            print(string.format("[DEBUG] Confirmed enemy #%d: Type=%d, Variant=%d", 
+                enemyCount, entity.Type, entity.Variant))
 
-            local velocity = entity.Velocity
+            -- Skip friendly/familiar
+            if isFriendlyOrFamiliar(entity) then
+                print("[DEBUG] Skipping friendly/familiar")
+                goto continue
+            end
+
+            -- Get velocity
+            local velocity = npc.Velocity
             local speed = velocity:Length()
+            print(string.format("[DEBUG] Enemy speed before: %.2f", speed))
 
-            -- Skip zero-speed projectiles
-            if speed < 0.1 then
+            -- Skip stationary entities
+            if speed < 0.5 then
+                print("[DEBUG] Speed too low, skipping")
                 goto continue
             end
 
             -- Apply speed reduction
-            local factor = EasyMode.Config.PROJECTILE_SPEED_FACTOR
-            local newSpeed = speed * factor
+            local factor = EasyMode.Config.ENEMY_SPEED_FACTOR
+            if npc:IsBoss() then
+                factor = EasyMode.Config.BOSS_SPEED_FACTOR
+                print("[DEBUG] Entity is Boss, using BOSS_SPEED_FACTOR")
+            end
 
-            -- Maintain direction
-            local direction = velocity:Normalized()
-            entity.Velocity = direction * newSpeed
+            npc.Velocity = velocity * factor
+            print(string.format("[DEBUG] Applied factor %.2f, new velocity: (%.2f, %.2f)", 
+                factor, npc.Velocity.X, npc.Velocity.Y))
 
-            print(string.format("[DEBUG] Projectile speed: %.2f -> %.2f (factor %.2f)", 
-                speed, newSpeed, factor))
+            processedEntities[npc] = true
+        else
+            -- Not an NPC, check if it's a projectile
+            if isEnemyProjectile(entity) then
+                projectileCount = projectileCount + 1
+                print(string.format("[DEBUG] Found enemy projectile #%d: Type=%d, SpawnerType=%d", 
+                    projectileCount, entity.Type, entity.SpawnerType or -1))
+
+                local velocity = entity.Velocity
+                local speed = velocity:Length()
+
+                -- Skip zero-speed projectiles
+                if speed < 0.1 then
+                    goto continue
+                end
+
+                -- Apply speed reduction
+                local factor = EasyMode.Config.PROJECTILE_SPEED_FACTOR
+                local newSpeed = speed * factor
+
+                -- Maintain direction
+                local direction = velocity:Normalized()
+                entity.Velocity = direction * newSpeed
+
+                print(string.format("[DEBUG] Projectile speed: %.2f -> %.2f (factor %.2f)", 
+                    speed, newSpeed, factor))
+            else
+                -- Not an enemy or enemy projectile, just log for debugging
+                print(string.format("[DEBUG] Entity #%d: Type=%d, Variant=%d, SubType=%d - NOT enemy/projectile",
+                    enemyCount + projectileCount + 1, entity.Type, entity.Variant, entity.SubType))
+            end
         end
 
         ::continue::
