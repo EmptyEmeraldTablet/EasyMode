@@ -95,26 +95,35 @@ local function onNPCUpdate(npc)
     -- 检查 npc 是否存在
     if not npc then return end
 
+    local npcType = npc.Type
+    local npcVariant = npc.Variant
+    print(string.format("[DEBUG] onNPCUpdate: Type=%d, Variant=%d", npcType or -1, npcVariant or -1))
+
     -- 只处理敌人实体
     if not isNPCEntity(npc) then
+        print("[DEBUG] Not NPC entity (Type < 10 or Type == 1000), skipping")
         return
     end
 
     -- 豁免友好单位和跟随物
     if isFriendlyOrFamiliar(npc) then
+        print("[DEBUG] Friendly/familiar entity, skipping")
         return
     end
 
     -- 忽略已死亡的实体
     if npc:IsDead() then
+        print("[DEBUG] Entity is dead, skipping")
         return
     end
 
     local velocity = npc.Velocity
     local speed = velocity:Length()
+    print(string.format("[DEBUG] Entity speed before: %.2f", speed))
 
     -- 忽略静止或几乎静止的实体
     if speed < 0.5 then
+        print("[DEBUG] Speed too low (< 0.5), skipping")
         return
     end
 
@@ -122,10 +131,14 @@ local function onNPCUpdate(npc)
     local factor = EasyMode.Config.ENEMY_SPEED_FACTOR
     if npc:IsBoss() then
         factor = EasyMode.Config.BOSS_SPEED_FACTOR
+        print("[DEBUG] Entity is Boss, using BOSS_SPEED_FACTOR")
+    else
+        print(string.format("[DEBUG] Entity is normal enemy, using ENEMY_SPEED_FACTOR: %.2f", factor))
     end
 
     -- 应用速度减速
     npc.Velocity = velocity * factor
+    print(string.format("[DEBUG] Applied factor %.2f, new velocity: (%.2f, %.2f)", factor, npc.Velocity.X, npc.Velocity.Y))
 
     -- 记录处理过的实体
     processedEntities[npc] = true
@@ -140,6 +153,9 @@ local function onProjectileUpdate(projectile)
     local velocity = projectile.Velocity
     local speed = velocity:Length()
 
+    print(string.format("[DEBUG] Projectile: Type=%d, SpawnerType=%d, speed=%.2f", 
+        projectile.Type or -1, projectile.SpawnerType or -1, speed))
+
     -- 忽略速度为0的投射物
     if speed < 0.1 then
         return
@@ -153,6 +169,8 @@ local function onProjectileUpdate(projectile)
     local direction = velocity:Normalized()
     projectile.Velocity = direction * newSpeed
 
+    print(string.format("[DEBUG] Projectile speed: %.2f -> %.2f (factor %.2f)", speed, newSpeed, factor))
+
     -- 调整射程：速度降低后，增加存活时间来保持相同射程
     -- 射程 = 速度 × 时间
     -- 新时间 = 旧时间 / factor
@@ -163,6 +181,7 @@ local function onProjectileUpdate(projectile)
                 adjustedLifetime = projectile.Lifetime,
                 originalSpeed = speed
             }
+            print(string.format("[DEBUG] Projectile Lifetime: %d, adjusting", projectile.Lifetime))
         end
 
         -- 调整剩余存活时间
@@ -191,13 +210,22 @@ local function onTearUpdate(tear)
     -- 检查 tear 是否存在
     if not tear then return end
 
+    local spawnerType = tear.SpawnerType
+    print(string.format("[DEBUG] onTearUpdate: Type=%d, SpawnerType=%d", tear.Type or -1, spawnerType or -1))
+
     -- 检查是否是敌对眼泪
-    if tear.SpawnerType == EntityType.ENTITY_PLAYER then
+    if spawnerType == EntityType.ENTITY_PLAYER then
+        print("[DEBUG] Player tear, skipping")
         return  -- 玩家眼泪，不处理
     end
 
-    if tear.SpawnerType and tear.SpawnerType >= 10 then
-        tear.Velocity = tear.Velocity * EasyMode.Config.TEAR_SPEED_FACTOR
+    if spawnerType and spawnerType >= 10 then
+        local oldVelocity = tear.Velocity
+        tear.Velocity = oldVelocity * EasyMode.Config.TEAR_SPEED_FACTOR
+        print(string.format("[DEBUG] Enemy tear slowed: (%.2f, %.2f) -> (%.2f, %.2f)",
+            oldVelocity.X, oldVelocity.Y, tear.Velocity.X, tear.Velocity.Y))
+    else
+        print(string.format("[DEBUG] Tear SpawnerType=%d not enemy, skipping", spawnerType or -1))
     end
 end
 
@@ -211,6 +239,8 @@ end
 -- ============================================================================
 
 local function Init()
+    print("[DEBUG] Init() called, registering callbacks...")
+    
     -- 注册所有回调
     callbacks = {
         { ModCallbacks.MC_NPC_UPDATE, onNPCUpdate },
@@ -221,6 +251,7 @@ local function Init()
 
     for _, callback in ipairs(callbacks) do
         Isaac.AddCallback(Mod, callback[1], callback[2], 0)
+        print(string.format("[DEBUG] Registered callback: %d", callback[1]))
     end
 
     -- 清理缓存
