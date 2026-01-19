@@ -97,39 +97,47 @@ local function onPostUpdate()
 
     local enemyCount = 0
     local projectileCount = 0
+    local npcCount = 0
+    local projectileTypeCount = 0
+    local tearTypeCount = 0
+    local otherCount = 0
 
     for _, entity in ipairs(entities) do
-        if not entity or not entity.Valid then
-            goto continue
-        end
-
-        -- Process enemies - use ToNPC() check first (most reliable)
+        -- Debug: print all entities first
+        local eType = entity.Type
+        local eVariant = entity.Variant
+        local eSubType = entity.SubType
+        local eValid = entity.Valid
+        local eIndex = entity.Index
+        
+        -- Try ToNPC
         local npc = entity:ToNPC()
         if npc then
-            print(string.format("[DEBUG] Entity #%d: Type=%d, Variant=%d, ToNPC()=SUCCESS", 
-                enemyCount + 1, entity.Type, entity.Variant))
-            
-            -- Verify it's an enemy (Type >= 10 and != 1000)
-            local etype = entity.Type
-            if etype < 10 or etype == 1000 then
-                print(string.format("[DEBUG] Not enemy type (Type=%d), skipping", etype))
-                goto continue
-            end
-
+            npcCount = npcCount + 1
+            print(string.format("[DEBUG] Entity #%d: Type=%d, Variant=%d, SubType=%d, Valid=%s, ToNPC()=YES",
+                npcCount + projectileTypeCount + tearTypeCount + otherCount + 1, eType, eVariant, eSubType, tostring(eValid)))
+        elseif eType == EntityType.ENTITY_PROJECTILE then
+            projectileTypeCount = projectileTypeCount + 1
+            print(string.format("[DEBUG] Entity #%d: Type=%d (PROJECTILE), Variant=%d, SubType=%d, Valid=%s",
+                npcCount + projectileTypeCount + tearTypeCount + otherCount + 1, eType, eVariant, eSubType, tostring(eValid)))
+        elseif eType == EntityType.ENTITY_TEAR then
+            tearTypeCount = tearTypeCount + 1
+            print(string.format("[DEBUG] Entity #%d: Type=%d (TEAR), Variant=%d, SubType=%d, Valid=%s, SpawnerType=%d",
+                npcCount + projectileTypeCount + tearTypeCount + otherCount + 1, eType, eVariant, eSubType, tostring(eValid), entity.SpawnerType or -1))
+        else
+            otherCount = otherCount + 1
+            print(string.format("[DEBUG] Entity #%d: Type=%d, Variant=%d, SubType=%d, Valid=%s - OTHER",
+                npcCount + projectileTypeCount + tearTypeCount + otherCount, eType, eVariant, eSubType, tostring(eValid)))
+        end
+        
+        -- Process enemies
+        if npc and eValid then
             enemyCount = enemyCount + 1
-            print(string.format("[DEBUG] Confirmed enemy #%d: Type=%d, Variant=%d", 
-                enemyCount, entity.Type, entity.Variant))
-
-            -- Skip friendly/familiar
-            if isFriendlyOrFamiliar(entity) then
-                print("[DEBUG] Skipping friendly/familiar")
-                goto continue
-            end
-
+            
             -- Get velocity
             local velocity = npc.Velocity
             local speed = velocity:Length()
-            print(string.format("[DEBUG] Enemy speed before: %.2f", speed))
+            print(string.format("[DEBUG] ENEMY #%d speed: %.2f", enemyCount, speed))
 
             -- Skip stationary entities
             if speed < 0.5 then
@@ -141,51 +149,43 @@ local function onPostUpdate()
             local factor = EasyMode.Config.ENEMY_SPEED_FACTOR
             if npc:IsBoss() then
                 factor = EasyMode.Config.BOSS_SPEED_FACTOR
-                print("[DEBUG] Entity is Boss, using BOSS_SPEED_FACTOR")
             end
 
             npc.Velocity = velocity * factor
-            print(string.format("[DEBUG] Applied factor %.2f, new velocity: (%.2f, %.2f)", 
-                factor, npc.Velocity.X, npc.Velocity.Y))
+            print(string.format("[DEBUG] ENEMY #%d slowed: %.2f -> %.2f (factor %.2f)", 
+                enemyCount, speed, speed * factor, factor))
+        end
 
-            processedEntities[npc] = true
-        else
-            -- Not an NPC, check if it's a projectile
-            if isEnemyProjectile(entity) then
-                projectileCount = projectileCount + 1
-                print(string.format("[DEBUG] Found enemy projectile #%d: Type=%d, SpawnerType=%d", 
-                    projectileCount, entity.Type, entity.SpawnerType or -1))
+        -- Process enemy projectiles
+        if eType == EntityType.ENTITY_PROJECTILE and eValid then
+            projectileCount = projectileCount + 1
+            
+            local velocity = entity.Velocity
+            local speed = velocity:Length()
 
-                local velocity = entity.Velocity
-                local speed = velocity:Length()
-
-                -- Skip zero-speed projectiles
-                if speed < 0.1 then
-                    goto continue
-                end
-
-                -- Apply speed reduction
-                local factor = EasyMode.Config.PROJECTILE_SPEED_FACTOR
-                local newSpeed = speed * factor
-
-                -- Maintain direction
-                local direction = velocity:Normalized()
-                entity.Velocity = direction * newSpeed
-
-                print(string.format("[DEBUG] Projectile speed: %.2f -> %.2f (factor %.2f)", 
-                    speed, newSpeed, factor))
-            else
-                -- Not an enemy or enemy projectile, just log for debugging
-                print(string.format("[DEBUG] Entity #%d: Type=%d, Variant=%d, SubType=%d - NOT enemy/projectile",
-                    enemyCount + projectileCount + 1, entity.Type, entity.Variant, entity.SubType))
+            -- Skip zero-speed projectiles
+            if speed < 0.1 then
+                goto continue
             end
+
+            -- Apply speed reduction
+            local factor = EasyMode.Config.PROJECTILE_SPEED_FACTOR
+            local newSpeed = speed * factor
+
+            -- Maintain direction
+            local direction = velocity:Normalized()
+            entity.Velocity = direction * newSpeed
+
+            print(string.format("[DEBUG] PROJECTILE #%d slowed: %.2f -> %.2f", 
+                projectileCount, speed, newSpeed))
         end
 
         ::continue::
     end
 
-    print(string.format("[DEBUG] Scan complete: %d enemies, %d enemy projectiles processed", 
-        enemyCount, projectileCount))
+    print(string.format("[DEBUG] Summary: %d total, NPC=%d, PROJECTILE=%d, TEAR=%d, OTHER=%d",
+        #entities, npcCount, projectileTypeCount, tearTypeCount, otherCount))
+    print(string.format("[DEBUG] Processed: %d enemies, %d enemy projectiles", enemyCount, projectileCount))
 end
 
 -- ============================================================================
