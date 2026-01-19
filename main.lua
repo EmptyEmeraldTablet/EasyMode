@@ -3,7 +3,6 @@
 -- Does not affect player attributes
 
 local EasyMode = RegisterMod("Easy Mode", 1)
-local Mod = EasyMode  -- Alias for callback registration
 
 -- ============================================================================
 -- 配置
@@ -26,7 +25,6 @@ EasyMode.Config = {
 
 local processedEntities = setmetatable({}, {__mode = "k"})
 local projectileData = setmetatable({}, {__mode = "k"})
-local callbacks = {}
 
 -- ============================================================================
 -- 实体类型检查函数
@@ -231,81 +229,60 @@ local function onTearUpdate(tear)
 end
 
 local function onRoomUpdate()
-    -- Room-level update logic
-    -- Can be used to clean up removed projectile data
+    -- Room-level update logic (no-op for now)
 end
 
 -- ============================================================================
--- 初始化和清理
+-- Mod Callbacks
+-- ============================================================================
+-- Mod Callbacks
 -- ============================================================================
 
-local function Init()
-    print("[DEBUG] Init() called, registering callbacks...")
-    
-    -- 注册所有回调
-    callbacks = {
-        { ModCallbacks.MC_NPC_UPDATE, onNPCUpdate },
-        { ModCallbacks.MC_POST_PROJECTILE_UPDATE, onProjectileUpdate },
-        { ModCallbacks.MC_POST_TEAR_UPDATE, onTearUpdate },
-        { ModCallbacks.MC_POST_UPDATE, onRoomUpdate }
-    }
-
-    for _, callback in ipairs(callbacks) do
-        Isaac.AddCallback(Mod, callback[1], callback[2], 0)
-        print(string.format("[DEBUG] Registered callback: %d", callback[1]))
-    end
-
-    -- 清理缓存
+function EasyMode:onGameStarted()
+    -- Clean cache on new game
     processedEntities = {}
     projectileData = {}
-
     print("[EasyMode] Mod loaded - game difficulty reduced")
     print(string.format("[EasyMode] Enemy speed: %.0f%%, Projectile speed: %.0f%%",
         EasyMode.Config.ENEMY_SPEED_FACTOR * 100,
         EasyMode.Config.PROJECTILE_SPEED_FACTOR * 100))
 end
 
-local function Cleanup()
-    -- 移除所有回调
-    for _, callback in ipairs(callbacks or {}) do
-        Isaac.RemoveCallback(Mod, callback[1], callback[2])
-    end
-    callbacks = {}
+function EasyMode:onGameEnded()
+    -- Cleanup is handled automatically when callbacks are removed
+    print("[EasyMode] Game ended")
+end
 
-    -- 清理缓存
+function EasyMode:onPreGameExit(shouldSave)
+    print("[EasyMode] Game exiting, cleaning up...")
+    -- Clear all cached data
     processedEntities = {}
     projectileData = {}
 end
 
--- ============================================================================
--- 模组回调
--- ============================================================================
-
-function EasyMode:onGameStarted()
-    Init()
-end
-
-function EasyMode:onGameEnded()
-    Cleanup()
-end
-
-function EasyMode:onPreGameExit(shouldSave)
-    -- 游戏退出前保存配置（如果需要持久化）
-end
-
--- 调试功能：打印当前配置
-function EasyMode:printConfig()
-    print("=== Easy Mode 当前配置 ===")
-    print(string.format("敌人速度因子: %.2f", EasyMode.Config.ENEMY_SPEED_FACTOR))
-    print(string.format("Boss速度因子: %.2f", EasyMode.Config.BOSS_SPEED_FACTOR))
-    print(string.format("投射物速度因子: %.2f", EasyMode.Config.PROJECTILE_SPEED_FACTOR))
-    print(string.format("攻击冷却倍数: %.2f", EasyMode.Config.ATTACK_COOLDOWN_MULTIPLIER))
-    print("============================")
-end
-
--- 注册回调
+-- Register mod callbacks
 EasyMode:AddCallback(ModCallbacks.MC_POST_GAME_STARTED, EasyMode.onGameStarted)
 EasyMode:AddCallback(ModCallbacks.MC_POST_GAME_END, EasyMode.onGameEnded)
 EasyMode:AddCallback(ModCallbacks.MC_PRE_GAME_EXIT, EasyMode.onPreGameExit)
+
+-- ============================================================================
+-- Register game callbacks immediately (not in onGameStarted)
+-- ============================================================================
+
+-- Register NPC update callback
+Isaac.AddCallback(EasyMode, ModCallbacks.MC_NPC_UPDATE, onNPCUpdate, 0)
+print("[DEBUG] Registered MC_NPC_UPDATE")
+
+-- Register projectile update callback
+Isaac.AddCallback(EasyMode, ModCallbacks.MC_POST_PROJECTILE_UPDATE, onProjectileUpdate, 0)
+print("[DEBUG] Registered MC_POST_PROJECTILE_UPDATE")
+
+-- Register tear update callback
+Isaac.AddCallback(EasyMode, ModCallbacks.MC_POST_TEAR_UPDATE, onTearUpdate, 0)
+print("[DEBUG] Registered MC_POST_TEAR_UPDATE")
+
+-- Register room update callback
+Isaac.AddCallback(EasyMode, ModCallbacks.MC_POST_UPDATE, onRoomUpdate, 0)
+print("[DEBUG] Registered MC_POST_UPDATE")
 
 return EasyMode
