@@ -3,6 +3,7 @@
 -- Does not affect player attributes
 
 local EasyMode = RegisterMod("Easy Mode", 1)
+local Mod = EasyMode  -- Alias for callback registration
 
 -- ============================================================================
 -- 配置
@@ -230,29 +231,8 @@ local function onTearUpdate(tear)
 end
 
 local function onRoomUpdate()
-    -- DEBUG: Periodically enumerate all entities to see what's in the room
-    local game = Game()
-    local room = game:GetRoom()
-    if not room then return end
-    
-    -- Only log every 60 frames (about 1 second) to avoid spam
-    if (Game():GetFrameCount() or 0) % 60 ~= 0 then return end
-    
-    print("[DEBUG] === Room Entity Scan ===")
-    local entities = room:GetEntities()
-    local count = 0
-    for _, entity in ipairs(entities) do
-        if entity and entity.Exists then
-            local eType = entity.Type
-            local eVariant = entity.Variant
-            local eSpawner = entity.SpawnerType
-            local vel = entity.Velocity
-            print(string.format("[DEBUG] Entity[%d]: Type=%d, Var=%d, Spawner=%d, Vel=(%.2f,%.2f)",
-                count, eType or -1, eVariant or -1, eSpawner or -1, vel and vel.X or 0, vel and vel.Y or 0))
-            count = count + 1
-        end
-    end
-    print(string.format("[DEBUG] === Total entities: %d ===", count))
+    -- Room-level update logic
+    -- Can be used to clean up removed projectile data
 end
 
 -- ============================================================================
