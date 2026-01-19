@@ -1,0 +1,17 @@
+Easy Mode Mod
+=================
+
+A mod that reduces game difficulty by controlling enemy attributes.
+
+Features:
+- Enemy movement speed reduced by 40%
+- Boss movement speed reduced by 15%
+- Enemy projectile speed reduced by 40%
+- Trap damage reduced by 30-50%
+- Does NOT affect player attributes
+- Friendly units and familiars are unaffected
+
+This mod is designed for players who want a more relaxed gameplay experience without fundamentally changing the game's mechanics.
+
+Compatible with all DLC content.
+Does not affect achievements or progression.
