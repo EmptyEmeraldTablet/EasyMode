@@ -92,6 +92,9 @@ end
 -- ============================================================================
 
 local function onNPCUpdate(npc)
+    -- 检查 npc 是否存在
+    if not npc then return end
+
     -- 只处理敌人实体
     if not isNPCEntity(npc) then
         return
