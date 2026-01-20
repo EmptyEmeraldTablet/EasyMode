@@ -144,12 +144,24 @@ end
 local function onPostUpdate()
     local entities = Isaac.GetRoomEntities()
     
+    -- DEBUG: Track entities we've seen per type
+    local seenTypes = {}
+    
     for _, entity in ipairs(entities) do
         if entity.Valid == false then
             goto continue
         end
         
         local etype = entity.Type
+        local variant = entity.Variant
+        local spawner = entity.SpawnerType
+        
+        -- DEBUG: Track entity types (print each new type once per room)
+        if not seenTypes[etype] then
+            seenTypes[etype] = 0
+            print(string.format("[EasyMode DEBUG] New entity type: Type=%d, Variant=%d, Spawner=%d",
+                etype, variant, spawner or -1))
+        end
         
         -- ========================================
         -- Process enemies
@@ -193,10 +205,6 @@ local function onPostUpdate()
                 -- DEBUG: Log projectile processing
                 -- print(string.format("[EasyMode] Projectile: Type=%d, Var=%d, Speed=%.2f, Factor=%.2f",
                 --     etype, entity.Variant, speed, factor))
-                
-                -- TEMPORARILY DISABLED: Automatic range compensation
-                -- local projectile = entity:ToProjectile()
-                -- applyRangeCompensation(entity, projectile, factor)
             end
         end
         
@@ -204,8 +212,12 @@ local function onPostUpdate()
         -- Process enemy tears
         -- ========================================
         if etype == EntityType.ENTITY_TEAR then
+            -- DEBUG: Print ALL tears with their spawner
+            print(string.format("[EasyMode DEBUG] Tear: Type=%d, Variant=%d, Spawner=%d (Player=%d), IsEnemyTear=%s",
+                etype, variant, spawner, EntityType.ENTITY_PLAYER, tostring(spawner ~= EntityType.ENTITY_PLAYER)))
+            
             -- Skip player tears
-            if entity.SpawnerType ~= EntityType.ENTITY_PLAYER then
+            if spawner ~= EntityType.ENTITY_PLAYER then
                 local velocity = entity.Velocity
                 local speed = velocity:Length()
                 
@@ -213,10 +225,6 @@ local function onPostUpdate()
                     local factor = Config.TEAR_SPEED_FACTOR
                     local direction = velocity:Normalized()
                     entity.Velocity = direction * (speed * factor)
-                    
-                    -- DEBUG: Uncomment to trace tear processing
-                    -- print(string.format("[EasyMode DEBUG] Tear: Spawner=%d, Speed=%.2f, Factor=%.2f, Result=%.2f",
-                    --     entity.SpawnerType, speed, factor, speed * factor))
                 end
             end
         end
