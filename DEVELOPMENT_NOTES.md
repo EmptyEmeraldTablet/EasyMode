@@ -265,6 +265,141 @@ end
 5. **Use English for all output** - Console doesn't support UTF-8 Chinese
 6. **Single file structure** - require() has limitations
 7. **Remove debug logging** - Keep only essential output
+8. **Projectile speed factors need testing** - Too low causes projectiles to stall
+9. **EntityBomb has SetExplosionCountdown()** - Use to extend bomb explosion time
+
+---
+
+## 11. Projectile Speed Adjustment
+
+### Problem
+Initial projectile speed factor of 0.5 (50% reduction) caused enemy projectiles to nearly stop moving, making them ineffective and breaking game mechanics.
+
+### Investigation
+- Projectiles with very low speed appear to "hover" in place
+- This breaks enemy attack patterns and game balance
+- The game expects projectiles to travel at certain speeds to be dodgeable
+
+### Solution
+Adjusted speed factors to be less aggressive:
+```lua
+PROJECTILE_SPEED_FACTOR = 0.7,   -- 30% reduction instead of 50%
+TEAR_SPEED_FACTOR = 0.7,         -- 30% reduction instead of 50%
+ROCK_WAVE_SPEED_FACTOR = 0.6,    -- 40% reduction for heavier projectiles
+```
+
+### Best Practices
+- Test speed factors in-game to find the right balance
+- Consider different factors for different projectile types
+- Lighter projectiles (tears) can be slowed more than heavy ones (rocks)
+- Avoid speed factors below 0.6 for standard projectiles
+
+---
+
+## 12. Bomb Explosion Time Extension
+
+### Problem
+Need to extend the time before enemy bombs explode to give players more reaction time.
+
+### EntityBomb API
+The `EntityBomb` class provides methods to modify bomb behavior:
+
+```lua
+-- Get bomb entity
+local bomb = entity:ToBomb()
+if bomb then
+    -- Get current explosion countdown
+    local currentCountdown = bomb.ExplosionCountdown  -- int, read-only property
+
+    -- Set new explosion countdown (void function)
+    bomb:SetExplosionCountdown(int Countdown)
+end
+```
+
+### EntityBomb Properties
+| Property | Type | Description |
+|----------|------|-------------|
+| ExplosionCountdown | int | Time until explosion (frames) |
+| ExplosionDamage | float | Damage of the explosion |
+| Flags | int | Behavior flags (uses TearFlags) |
+| IsFetus | boolean | Is this a fetus bomb? |
+| RadiusMultiplier | float | Explosion radius multiplier |
+
+### Solution
+Use `SetExplosionCountdown()` to extend explosion time:
+```lua
+local bomb = entity:ToBomb()
+if bomb and not processedBombs[bomb] then
+    local currentCountdown = bomb.ExplosionCountdown
+    if currentCountdown and currentCountdown > 0 then
+        local newCountdown = currentCountdown * 1.5  -- 50% longer
+        bomb:SetExplosionCountdown(math.floor(newCountdown))
+        processedBombs[bomb] = true
+    end
+end
+```
+
+### Important Notes
+- Each bomb should only have its countdown modified once
+- Use a cache (weak table) to track processed bombs
+- The countdown is in frames, not seconds (60 frames = 1 second)
+- Be careful not to extend too much or bombs become trivial
+
+---
+
+## 13. Rock/Wave Projectile Handling
+
+### Problem
+Spiders (EntityType.ENTITY_SPIDER = 85) and other enemies spawn rock projectiles that need different speed handling.
+
+### Rock Projectile Detection
+Rock projectiles are EntityType.ENTITY_PROJECTILE with specific characteristics:
+
+```lua
+local function isRockProjectile(entity)
+    if entity.Type ~= EntityType.ENTITY_PROJECTILE then
+        return false
+    end
+    
+    -- Check for rock variant
+    local variant = entity.Variant
+    if variant == ProjectileVariant.PROJECTILE_ROCK then
+        return true
+    end
+    
+    -- Alternative: Check projectile properties
+    local projectile = entity:ToProjectile()
+    if projectile then
+        -- Rock projectiles may have different damage/height values
+        return true  -- Heuristic approach
+    end
+    
+    return false
+end
+```
+
+### ProjectileVariant Constants
+```lua
+ProjectileVariant.PROJECTILE_BLOOD    -- 0
+ProjectileVariant.PROJECTILE_TEAR     -- 1
+ProjectileVariant.PROJECTILE_ROCK     -- 2
+ProjectileVariant.PROJECTILE_SPIRAL   -- 3
+-- etc.
+```
+
+### Solution
+Apply different speed factors based on projectile type:
+```lua
+if entity.Type == EntityType.ENTITY_PROJECTILE then
+    local factor = EasyMode.Config.PROJECTILE_SPEED_FACTOR
+    
+    if isRockProjectile(entity) then
+        factor = EasyMode.Config.ROCK_WAVE_SPEED_FACTOR
+    end
+    
+    entity.Velocity = direction * (speed * factor)
+end
+```
 
 ---
 

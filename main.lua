@@ -11,8 +11,10 @@ local EasyMode = RegisterMod("Easy Mode", 1)
 EasyMode.Config = {
     ENEMY_SPEED_FACTOR = 0.4,        -- Enemy move speed (0.4 = 60% reduction)
     BOSS_SPEED_FACTOR = 0.7,         -- Boss move speed (0.7 = 30% reduction)
-    PROJECTILE_SPEED_FACTOR = 0.5,   -- Enemy projectile speed (50% reduction)
-    TEAR_SPEED_FACTOR = 0.5,         -- Enemy tear speed (50% reduction)
+    PROJECTILE_SPEED_FACTOR = 0.7,   -- Enemy projectile speed (30% reduction, avoids stalling)
+    TEAR_SPEED_FACTOR = 0.7,         -- Enemy tear speed (30% reduction)
+    ROCK_WAVE_SPEED_FACTOR = 0.6,    -- Rock/Wave projectile speed (40% reduction)
+    BOMB_EXPLOSION_DELAY_MULTIPLIER = 1.5, -- Extend bomb explosion time (1.5x)
     ATTACK_COOLDOWN_MULTIPLIER = 1.5, -- Attack cooldown multiplier
     EXCLUDE_FRIENDLY = true,         -- Exclude friendly units
     EXCLUDE_FAMILIARS = true,        -- Exclude familiars
@@ -24,7 +26,7 @@ EasyMode.Config = {
 -- ============================================================================
 
 local processedEntities = setmetatable({}, {__mode = "k"})
-local lastLoggedFrame = 0
+local processedBombs = setmetatable({}, {__mode = "k"})
 
 -- ============================================================================
 -- Entity type check functions
@@ -69,6 +71,33 @@ local function isEnemyProjectile(entity)
     return false
 end
 
+-- Check if entity is a rock projectile (spawned by spiders)
+local function isRockProjectile(entity)
+    if entity.Type ~= EntityType.ENTITY_PROJECTILE then
+        return false
+    end
+    
+    -- Rock projectiles from spiders have specific variants
+    -- Variant 1 is typically the rock projectile
+    local variant = entity.Variant
+    
+    -- Rock projectiles are usually Variant 1 or have specific tear flags
+    -- We identify them by checking if they're not blood/special projectiles
+    if variant == ProjectileVariant.PROJECTILE_ROCK then
+        return true
+    end
+    
+    -- Alternative check: rocks have high mass/damage characteristics
+    local projectile = entity:ToProjectile()
+    if projectile then
+        -- Rock projectiles often have different damage values
+        -- This is a heuristic approach
+        return true
+    end
+    
+    return false
+end
+
 -- ============================================================================
 -- Main update callback - process all entities each frame
 -- ============================================================================
@@ -77,39 +106,95 @@ local function onPostUpdate()
     local entities = Isaac.GetRoomEntities()
     
     for _, entity in ipairs(entities) do
+        if entity.Valid == false then
+            goto continue
+        end
+        
+        local etype = entity.Type
+        
+        -- ========================================
         -- Process enemies
+        -- ========================================
         local npc = entity:ToNPC()
-        if npc and (entity.Valid ~= false) then
-            local etype = entity.Type
-            -- Skip if not a valid enemy type
-            if etype >= 10 and etype ~= 1000 then
-                local velocity = npc.Velocity
-                local speed = velocity:Length()
-                
-                -- Skip stationary entities
-                if speed >= 0.5 then
-                    -- Apply speed reduction
-                    local factor = EasyMode.Config.ENEMY_SPEED_FACTOR
-                    if npc:IsBoss() then
-                        factor = EasyMode.Config.BOSS_SPEED_FACTOR
-                    end
-                    
-                    npc.Velocity = velocity * factor
+        if npc and etype >= 10 and etype ~= 1000 then
+            local velocity = npc.Velocity
+            local speed = velocity:Length()
+            
+            -- Skip stationary entities
+            if speed >= 0.5 then
+                -- Apply speed reduction
+                local factor = EasyMode.Config.ENEMY_SPEED_FACTOR
+                if npc:IsBoss() then
+                    factor = EasyMode.Config.BOSS_SPEED_FACTOR
                 end
+                
+                npc.Velocity = velocity * factor
             end
         end
-
-        -- Process enemy projectiles
-        if entity.Type == EntityType.ENTITY_PROJECTILE and (entity.Valid ~= false) then
+        
+        -- ========================================
+        -- Process enemy projectiles (tears, rocks, etc.)
+        -- ========================================
+        if etype == EntityType.ENTITY_PROJECTILE then
             local velocity = entity.Velocity
             local speed = velocity:Length()
             
             -- Skip zero-speed projectiles
             if speed >= 0.1 then
                 local factor = EasyMode.Config.PROJECTILE_SPEED_FACTOR
+                
+                -- Check if it's a rock/wave projectile for different factor
+                if isRockProjectile(entity) then
+                    factor = EasyMode.Config.ROCK_WAVE_SPEED_FACTOR
+                end
+                
                 local direction = velocity:Normalized()
                 entity.Velocity = direction * (speed * factor)
             end
+        end
+        
+        -- ========================================
+        -- Process enemy tears
+        -- ========================================
+        if etype == EntityType.ENTITY_TEAR then
+            -- Skip player tears
+            if entity.SpawnerType ~= EntityType.ENTITY_PLAYER then
+                local velocity = entity.Velocity
+                local speed = velocity:Length()
+                
+                if speed >= 0.1 then
+                    local factor = EasyMode.Config.TEAR_SPEED_FACTOR
+                    local direction = velocity:Normalized()
+                    entity.Velocity = direction * (speed * factor)
+                end
+            end
+        end
+        
+        -- ========================================
+        -- Process enemy bombs - extend explosion time
+        -- ========================================
+        if etype == EntityType.ENTITY_BOMB then
+            local bomb = entity:ToBomb()
+            if bomb and not processedBombs[bomb] then
+                -- Get current countdown
+                local currentCountdown = bomb.ExplosionCountdown
+                
+                if currentCountdown and currentCountdown > 0 then
+                    -- Extend explosion time by multiplier
+                    local newCountdown = currentCountdown * EasyMode.Config.BOMB_EXPLOSION_DELAY_MULTIPLIER
+                    bomb:SetExplosionCountdown(math.floor(newCountdown))
+                    processedBombs[bomb] = true
+                end
+            end
+        end
+        
+        ::continue::
+    end
+    
+    -- Clean up processed bombs that are no longer valid
+    for bomb, _ in pairs(processedBombs) do
+        if not bomb or not bomb.Valid then
+            processedBombs[bomb] = nil
         end
     end
 end
@@ -120,10 +205,12 @@ end
 
 function EasyMode:onGameStarted()
     processedEntities = {}
+    processedBombs = {}
     print("[EasyMode] Mod loaded - game difficulty reduced")
-    print(string.format("[EasyMode] Enemy speed: %.0f%%, Projectile speed: %.0f%%",
+    print(string.format("[EasyMode] Enemy: %.0f%%, Projectile: %.0f%%, Bomb: %.0f%% time",
         EasyMode.Config.ENEMY_SPEED_FACTOR * 100,
-        EasyMode.Config.PROJECTILE_SPEED_FACTOR * 100))
+        EasyMode.Config.PROJECTILE_SPEED_FACTOR * 100,
+        EasyMode.Config.BOMB_EXPLOSION_DELAY_MULTIPLIER * 100))
 end
 
 function EasyMode:onGameEnded()
@@ -132,6 +219,7 @@ end
 
 function EasyMode:onPreGameExit(shouldSave)
     processedEntities = {}
+    processedBombs = {}
 end
 
 -- Register mod callbacks

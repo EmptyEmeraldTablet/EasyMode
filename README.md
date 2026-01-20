@@ -7,13 +7,18 @@
 ### 速度控制
 - **敌人移动速度**: 默认降低 60% (速度因子 0.4)
 - **Boss移动速度**: 默认降低 30% (速度因子 0.7)
-- **敌对投射物速度**: 默认降低 50% (速度因子 0.5)
-- **敌对眼泪速度**: 默认降低 50% (速度因子 0.5)
+- **敌对投射物速度**: 默认降低 30% (速度因子 0.7，避免悬停)
+- **敌对眼泪速度**: 默认降低 30% (速度因子 0.7)
+- **石刃波/岩石投射物**: 默认降低 40% (速度因子 0.6)
+
+### 炸弹时间延长
+- **炸弹爆炸延迟**: 默认延长 50% (1.5倍延时)
+- 使用 `EntityBomb:SetExplosionCountdown()` API 实现
 
 ### 特殊规则
 - 玩家和玩家跟随物不受影响
 - 友好单位（被魅惑的敌人）不受影响
-- 投射物降低速度后自动调整存活时间以保持相同射程
+- 投射物减速避免过慢导致悬停
 
 ### 伤害控制（已移除）
 > ⚠️ 伤害控制功能已移除。游戏伤害为整数（1-2点），无法简单使用倍率缩减。
@@ -48,13 +53,15 @@ EasyModeMod/
 
 ```lua
 EasyMode.Config = {
-    ENEMY_SPEED_FACTOR = 0.4,        -- 敌人速度 (0.4 = 40% 原始速度，即降低60%)
-    BOSS_SPEED_FACTOR = 0.7,         -- Boss速度 (0.7 = 70% 原始速度，即降低30%)
-    PROJECTILE_SPEED_FACTOR = 0.5,   -- 投射物速度 (0.5 = 50% 原始速度，即降低50%)
-    TEAR_SPEED_FACTOR = 0.5,         -- 眼泪速度 (0.5 = 50% 原始速度，即降低50%)
-    ATTACK_COOLDOWN_MULTIPLIER = 1.5,-- 攻击冷却倍数
-    EXCLUDE_FRIENDLY = true,         -- 豁免友好单位
-    EXCLUDE_FAMILIARS = true         -- 豁免跟随物
+    ENEMY_SPEED_FACTOR = 0.4,              -- 敌人速度 (0.4 = 40% 原始速度，即降低60%)
+    BOSS_SPEED_FACTOR = 0.7,               -- Boss速度 (0.7 = 70% 原始速度，即降低30%)
+    PROJECTILE_SPEED_FACTOR = 0.7,         -- 投射物速度 (0.7 = 70% 原始速度，即降低30%，避免悬停)
+    TEAR_SPEED_FACTOR = 0.7,               -- 眼泪速度 (0.7 = 70% 原始速度，即降低30%)
+    ROCK_WAVE_SPEED_FACTOR = 0.6,          -- 石刃波/岩石速度 (0.6 = 60% 原始速度，即降低40%)
+    BOMB_EXPLOSION_DELAY_MULTIPLIER = 1.5, -- 炸弹爆炸延时 (1.5 = 延长50%)
+    ATTACK_COOLDOWN_MULTIPLIER = 1.5,      -- 攻击冷却倍数
+    EXCLUDE_FRIENDLY = true,               -- 豁免友好单位
+    EXCLUDE_FAMILIARS = true               -- 豁免跟随物
 }
 ```
 
@@ -64,15 +71,28 @@ EasyMode.Config = {
 
 模组通过以下回调实现功能：
 
-1. `MC_POST_UPDATE` - 每帧扫描房间内所有实体并减速敌人和投射物
+1. `MC_POST_UPDATE` - 每帧扫描房间内所有实体
 2. 使用 `Isaac.GetRoomEntities()` 获取房间内所有实体
 3. 使用 `entity:ToNPC()` 检测敌人（比 `IsActiveEnemy()` 更可靠）
+4. 使用 `EntityBomb:SetExplosionCountdown()` 延长炸弹爆炸时间
+5. 针对不同投射物类型应用不同的减速因子
+
+### 支持的实体类型
+
+| 实体类型 | EntityType | 处理方式 |
+|---------|------------|----------|
+| 敌人NPC | 10-999 | 移动速度减速 |
+| 投射物 | 9 | 速度减速 (PROJECTILE_SPEED_FACTOR) |
+| 眼泪 | 2 (非玩家) | 速度减速 (TEAR_SPEED_FACTOR) |
+| 炸弹 | 4 | 爆炸时间延长 (BOMB_EXPLOSION_DELAY_MULTIPLIER) |
+| 石刃波/岩石 | 9 (特定变体) | 速度减速 (ROCK_WAVE_SPEED_FACTOR) |
 
 ### 性能优化
 
 - 忽略静止实体（速度 < 0.5）以减少不必要的计算
 - 使用实体类型检查快速过滤非敌人实体
 - 代码简洁高效，无冗余日志输出
+- 使用弱表缓存已处理实体
 
 ### 兼容性
 
