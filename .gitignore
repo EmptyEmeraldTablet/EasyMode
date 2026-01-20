@@ -24,3 +24,13 @@ Thumbs.db
 
 # Steam 覆盖文件
 *.patch
+
+# =============================================================================
+# 用户配置文件 - 配置独立存储，避免 git 合并冲突
+# =============================================================================
+# config.lua 使用 skip-worktree 保护，修改后不会产生冲突
+# 如需提交配置更改：
+#   git update-index --no-skip-worktree config.lua
+#   git add config.lua && git commit -m "Update config"
+#   git update-index --skip-worktree config.lua
+config.lua

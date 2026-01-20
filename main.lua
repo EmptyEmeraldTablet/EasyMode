@@ -2,24 +2,25 @@
 -- This mod reduces game difficulty by slowing down enemies and projectiles
 -- Does not affect player attributes
 
+-- Load configuration (can be overridden by user config.lua)
 local EasyMode = RegisterMod("Easy Mode", 1)
 
--- ============================================================================
--- Configuration
--- ============================================================================
-
-EasyMode.Config = {
-    ENEMY_SPEED_FACTOR = 0.4,              -- Enemy move speed (0.4 = 60% reduction)
-    BOSS_SPEED_FACTOR = 0.7,               -- Boss move speed (0.7 = 30% reduction)
-    PROJECTILE_SPEED_FACTOR = 0.7,         -- Enemy projectile speed (0.7 = 30% reduction)
-    TEAR_SPEED_FACTOR = 0.7,               -- Enemy tear speed (0.7 = 30% reduction)
-    ROCK_WAVE_SPEED_FACTOR = 0.6,          -- Rock/Wave projectile speed (0.6 = 40% reduction)
-    BOMB_EXPLOSION_DELAY_MULTIPLIER = 1.5, -- Extend bomb explosion time (1.5x)
-    ATTACK_COOLDOWN_MULTIPLIER = 1.5,      -- Attack cooldown multiplier
-    EXCLUDE_FRIENDLY = true,               -- Exclude friendly units
-    EXCLUDE_FAMILIARS = true,              -- Exclude familiars
-    ENABLE_ATTACK_SLOWDOWN = false         -- Enable attack slowdown (experimental)
+-- Try to load user config, fall back to defaults
+local userConfig = pcall(function() return require("config") end)
+local Config = userConfig and require("config") or {
+    ENEMY_SPEED_FACTOR = 0.4,
+    BOSS_SPEED_FACTOR = 0.7,
+    PROJECTILE_SPEED_FACTOR = 0.7,
+    TEAR_SPEED_FACTOR = 0.7,
+    ROCK_WAVE_SPEED_FACTOR = 0.6,
+    BOMB_EXPLOSION_DELAY_MULTIPLIER = 1.5,
+    ATTACK_COOLDOWN_MULTIPLIER = 1.5,
+    EXCLUDE_FRIENDLY = true,
+    EXCLUDE_FAMILIARS = true,
+    ENABLE_ATTACK_SLOWDOWN = false
 }
+
+Config = Config
 
 -- ============================================================================
 -- Cached entity processing for performance
@@ -155,9 +156,9 @@ local function onPostUpdate()
             -- Skip stationary entities
             if speed >= 0.5 then
                 -- Apply speed reduction
-                local factor = EasyMode.Config.ENEMY_SPEED_FACTOR
+                local factor = Config.ENEMY_SPEED_FACTOR
                 if npc:IsBoss() then
-                    factor = EasyMode.Config.BOSS_SPEED_FACTOR
+                    factor = Config.BOSS_SPEED_FACTOR
                 end
                 
                 npc.Velocity = velocity * factor
@@ -173,19 +174,19 @@ local function onPostUpdate()
             
             -- Skip zero-speed projectiles
             if speed >= 0.1 then
-                local factor = EasyMode.Config.PROJECTILE_SPEED_FACTOR
+                local factor = Config.PROJECTILE_SPEED_FACTOR
                 
                 -- Check if it's a rock/wave projectile for different factor
                 if isRockProjectile(entity) then
-                    factor = EasyMode.Config.ROCK_WAVE_SPEED_FACTOR
+                    factor = Config.ROCK_WAVE_SPEED_FACTOR
                 end
                 
                 local direction = velocity:Normalized()
                 entity.Velocity = direction * (speed * factor)
                 
-                -- Automatic range compensation based on speed factor
-                local projectile = entity:ToProjectile()
-                applyRangeCompensation(entity, projectile, factor)
+                -- TEMPORARILY DISABLED: Automatic range compensation
+                -- local projectile = entity:ToProjectile()
+                -- applyRangeCompensation(entity, projectile, factor)
             end
         end
         
@@ -199,13 +200,13 @@ local function onPostUpdate()
                 local speed = velocity:Length()
                 
                 if speed >= 0.1 then
-                    local factor = EasyMode.Config.TEAR_SPEED_FACTOR
+                    local factor = Config.TEAR_SPEED_FACTOR
                     local direction = velocity:Normalized()
                     entity.Velocity = direction * (speed * factor)
                     
-                    -- Automatic range compensation based on speed factor
-                    local tear = entity:ToTear()
-                    applyRangeCompensation(entity, tear, factor)
+                    -- TEMPORARILY DISABLED: Automatic range compensation
+                    -- local tear = entity:ToTear()
+                    -- applyRangeCompensation(entity, tear, factor)
                 end
             end
         end
@@ -221,7 +222,7 @@ local function onPostUpdate()
                 
                 if currentCountdown and currentCountdown > 0 then
                     -- Extend explosion time by multiplier
-                    local newCountdown = currentCountdown * EasyMode.Config.BOMB_EXPLOSION_DELAY_MULTIPLIER
+                    local newCountdown = currentCountdown * Config.BOMB_EXPLOSION_DELAY_MULTIPLIER
                     bomb:SetExplosionCountdown(math.floor(newCountdown))
                     processedBombs[bomb] = true
                 end
@@ -248,10 +249,10 @@ function EasyMode:onGameStarted()
     processedBombs = {}
     print("[EasyMode] Mod loaded - game difficulty reduced")
     print(string.format("[EasyMode] Enemy: %.0f%%, Projectile: %.0f%%, Tear: %.0f%%, Bomb: %.0f%% time",
-        EasyMode.Config.ENEMY_SPEED_FACTOR * 100,
-        EasyMode.Config.PROJECTILE_SPEED_FACTOR * 100,
-        EasyMode.Config.TEAR_SPEED_FACTOR * 100,
-        EasyMode.Config.BOMB_EXPLOSION_DELAY_MULTIPLIER * 100))
+        Config.ENEMY_SPEED_FACTOR * 100,
+        Config.PROJECTILE_SPEED_FACTOR * 100,
+        Config.TEAR_SPEED_FACTOR * 100,
+        Config.BOMB_EXPLOSION_DELAY_MULTIPLIER * 100))
     print("[EasyMode] Automatic range compensation enabled")
 end
 
