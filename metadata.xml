@@ -3,53 +3,80 @@
     <name>Easy Mode</name>
     <directory>easymodemod</directory>
     <id>3650316373</id>
-    <description>Easy Mode Mod
-Reduce game difficulty by slowing down enemies and projectiles
+    <description>================================================================================
+中文介绍 | Chinese Introduction
+================================================================================
 
-========================================
-Chinese 中文介绍
-========================================
 通过降低敌人和投射物速度来减少《以撒的结合：忏悔》游戏难度的模组。
-支持自定义配置，适合想要轻松游玩的玩家。
 
-========================================
-English 英文介绍
-========================================
+【如何修改配置】
+1. 使用文本编辑器（VS Code、Notepad++）打开 config.lua
+2. 修改各项参数值
+3. 完全重启游戏使更改生效
+
+【可调整的参数】
+- ENEMY_SPEED_FACTOR: 敌人移动速度 (默认 0.4 = 降低 60%)
+- BOSS_SPEED_FACTOR: Boss 移动速度 (默认 0.7 = 降低 30%)
+- PROJECTILE_SPEED_FACTOR: 投射物速度 (默认 0.95 = 射程减少 ~10%)
+- TEAR_SPEED_FACTOR: 眼泪速度 (默认 0.95)
+- ROCK_WAVE_SPEED_FACTOR: 岩石/波浪速度 (默认 0.9 = 射程减少 ~19%)
+- BOMB_EXPLOSION_DELAY_MULTIPLIER: 炸弹延时 (默认 1.5 = 延长 50%)
+- ATTACK_COOLDOWN_MULTIPLIER: 攻击冷却 (默认 1.5)
+- EXCLUDE_FRIENDLY: 豁免友好单位 (默认 true)
+- EXCLUDE_FAMILIARS: 豁免跟随物 (默认 true)
+
+【预设难度】
+- 轻度: ENEMY_SPEED_FACTOR = 0.5
+- 中度: ENEMY_SPEED_FACTOR = 0.4 (默认)
+- 重度: ENEMY_SPEED_FACTOR = 0.3
+
+详细说明: https://github.com/EmptyEmeraldTablet/EasyModeMod/blob/main/CONFIG.md
+
+================================================================================
+English Introduction
+================================================================================
+
 A mod that reduces game difficulty by slowing down enemies and projectiles.
-Features customizable settings for players who want a more relaxed gaming experience.
 
-========================================
-Features 功能特性
-========================================
-- 速度控制 - 敌人移动速度降低 60%，Boss 降低 30%
-  Speed Control - Enemy movement speed reduced by 60%, Boss by 30%
-- 投射物减速 - 投射物速度降低约 5%，射程减少约 10%
-  Projectile Slowdown - Projectile speed reduced by ~5%, range reduced by ~10%
-- 炸弹延时 - 炸弹爆炸延迟延长 50%
-  Bomb Delay - Bomb explosion delay extended by 50%
-- 自定义配置 - 可调整各项参数，适应不同难度需求
-  Custom Configuration - Adjust parameters for different difficulty levels
-- 智能过滤 - 玩家和友好单位不受影响
-  Smart Filtering - Player and friendly units are unaffected
+【How to Customize】
+1. Open config.lua with a text editor (VS Code, Notepad++)
+2. Modify the parameter values
+3. Completely restart the game for changes to take effect
 
-========================================
-Configuration 配置
-========================================
-编辑 config.lua 文件自定义难度。
-Edit config.lua file to customize difficulty.
+【Adjustable Parameters】
+- ENEMY_SPEED_FACTOR: Enemy move speed (default 0.4 = 60% reduction)
+- BOSS_SPEED_FACTOR: Boss move speed (default 0.7 = 30% reduction)
+- PROJECTILE_SPEED_FACTOR: Projectile speed (default 0.95 = ~10% range reduction)
+- TEAR_SPEED_FACTOR: Tear speed (default 0.95)
+- ROCK_WAVE_SPEED_FACTOR: Rock/Wave speed (default 0.9 = ~19% range reduction)
+- BOMB_EXPLOSION_DELAY_MULTIPLIER: Bomb delay (default 1.5 = 50% longer)
+- ATTACK_COOLDOWN_MULTIPLIER: Attack cooldown (default 1.5)
+- EXCLUDE_FRIENDLY: Exclude friendly units (default true)
+- EXCLUDE_FAMILIARS: Exclude familiars (default true)
 
-详细配置说明请见 GitHub Repository:
-https://github.com/EmptyEmeraldTablet/EasyModeMod
+【Preset Difficulties】
+- Light: ENEMY_SPEED_FACTOR = 0.5
+- Medium: ENEMY_SPEED_FACTOR = 0.4 (default)
+- Heavy: ENEMY_SPEED_FACTOR = 0.3
 
-========================================
-Tags 标签
-========================================
-- Gameplay
-- Difficulty
-- Quality of Life
+Details: https://github.com/EmptyEmeraldTablet/EasyModeMod/blob/main/CONFIG.en.md
+
+================================================================================
+Features | 功能特性
+================================================================================
+- 速度控制 | Speed Control: 敌人/Boss 移动速度降低
+- 投射物减速 | Projectile Slowdown: 投射物速度降低，射程减少
+- 炸弹延时 | Bomb Delay: 炸弹爆炸延迟延长 50%
+- 自定义配置 | Custom Configuration: 可调整各项参数
+- 智能过滤 | Smart Filtering: 玩家和友好单位不受影响
+
+================================================================================
+Tags | 标签
+================================================================================
+Gameplay, Difficulty, Quality of Life
 
 License: MIT - See LICENSE file for details</description>
-    <version>1.0.6</version>
+    <version>1.0.7</version>
     <visibility>public</visibility>
     <tag id="Lua"/>
 </metadata>
