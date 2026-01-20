@@ -1,16 +1,93 @@
+-- =============================================================================
 -- Easy Mode Mod Configuration
+-- =============================================================================
 -- Copy this file to config.lua and modify as needed
 -- config.lua is tracked by git but local changes won't cause merge conflicts
+--
+-- PHYSICS NOTE: Range is proportional to speed squared (R ∝ v²)
+-- Example: speed factor 0.9 → range factor 0.81 (19% range reduction)
+-- See CONFIG.md or CONFIG.en.md for detailed documentation
+-- =============================================================================
 
 return {
-    ENEMY_SPEED_FACTOR = 0.4,              -- Enemy move speed (0.4 = 60% reduction)
-    BOSS_SPEED_FACTOR = 0.7,               -- Boss move speed (0.7 = 30% reduction)
-    PROJECTILE_SPEED_FACTOR = 0.7,         -- Enemy projectile speed (0.7 = 30% reduction)
-    TEAR_SPEED_FACTOR = 0.7,               -- Enemy tear speed (0.7 = 30% reduction)
-    ROCK_WAVE_SPEED_FACTOR = 0.6,          -- Rock/Wave projectile speed (0.6 = 40% reduction)
-    BOMB_EXPLOSION_DELAY_MULTIPLIER = 1.5, -- Extend bomb explosion time (1.5x)
-    ATTACK_COOLDOWN_MULTIPLIER = 1.5,      -- Attack cooldown multiplier
-    EXCLUDE_FRIENDLY = true,               -- Exclude friendly units
-    EXCLUDE_FAMILIARS = true,              -- Exclude familiars
-    ENABLE_ATTACK_SLOWDOWN = false         -- Enable attack slowdown (experimental)
+    -- =========================================================================
+    -- Speed Control Parameters
+    -- Values: 1.0 = full speed, 0.5 = 50% speed, etc.
+    -- =========================================================================
+
+    ENEMY_SPEED_FACTOR = 0.4,              -- Regular enemy move speed
+                                            -- 0.4 = 60% reduction
+                                            -- Range: 0.2 - 0.7
+
+    BOSS_SPEED_FACTOR = 0.7,               -- Boss move speed
+                                            -- 0.7 = 30% reduction
+                                            -- Range: 0.5 - 0.9
+                                            -- Note: Some bosses ignore slowdown
+
+    PROJECTILE_SPEED_FACTOR = 0.95,        -- Enemy projectile speed (Type 9)
+                                            -- 0.95 = ~5% speed reduction
+                                            -- ~10% range reduction (R ∝ v²)
+                                            -- Range: 0.8 - 1.0
+
+    TEAR_SPEED_FACTOR = 0.95,              -- Enemy tear speed (Type 2, Spawner != Player)
+                                            -- 0.95 = ~5% speed reduction
+                                            -- ~10% range reduction
+                                            -- Range: 0.8 - 1.0
+
+    ROCK_WAVE_SPEED_FACTOR = 0.9,          -- Rock/Wave projectile speed (PROJECTILE_ROCK)
+                                            -- 0.9 = ~10% speed reduction
+                                            -- ~19% range reduction
+                                            -- Range: 0.8 - 1.0
+
+    -- =========================================================================
+    -- Time Control Parameters
+    -- Values: 1.0 = normal time, 1.5 = 50% longer, etc.
+    -- =========================================================================
+
+    BOMB_EXPLOSION_DELAY_MULTIPLIER = 1.5, -- Extend bomb explosion delay
+                                            -- 1.5 = 50% longer delay
+                                            -- Range: 1.0 - 2.0
+
+    ATTACK_COOLDOWN_MULTIPLIER = 1.5,      -- Enemy attack cooldown multiplier (experimental)
+                                            -- 1.5 = 50% longer cooldown
+                                            -- Range: 1.0 - 2.0
+
+    -- =========================================================================
+    -- Exclusion Parameters
+    -- Values: true = exclude, false = affect
+    -- =========================================================================
+
+    EXCLUDE_FRIENDLY = true,               -- Exclude friendly (charmed) enemies
+                                            -- true = don't slow charmed enemies
+                                            -- false = slow all enemies
+
+    EXCLUDE_FAMILIARS = true,              -- Exclude player familiars
+                                            -- true = don't affect familiars
+                                            -- false = affect all entities
+
+    ENABLE_ATTACK_SLOWDOWN = false,        -- Enable attack slowdown (experimental)
+                                            -- false = disabled
+                                            -- true = may cause issues
+
+    -- =========================================================================
+    -- Alternative Presets (uncomment to use):
+    -- =========================================================================
+
+    -- Light Difficulty (beginners):
+    -- ENEMY_SPEED_FACTOR = 0.5,
+    -- BOSS_SPEED_FACTOR = 0.8,
+    -- PROJECTILE_SPEED_FACTOR = 0.98,
+    -- TEAR_SPEED_FACTOR = 0.98,
+    -- ROCK_WAVE_SPEED_FACTOR = 0.95,
+    -- BOMB_EXPLOSION_DELAY_MULTIPLIER = 1.2,
+    -- ATTACK_COOLDOWN_MULTIPLIER = 1.2,
+
+    -- Heavy Difficulty (challenge mode):
+    -- ENEMY_SPEED_FACTOR = 0.3,
+    -- BOSS_SPEED_FACTOR = 0.6,
+    -- PROJECTILE_SPEED_FACTOR = 0.9,
+    -- TEAR_SPEED_FACTOR = 0.9,
+    -- ROCK_WAVE_SPEED_FACTOR = 0.85,
+    -- BOMB_EXPLOSION_DELAY_MULTIPLIER = 2.0,
+    -- ATTACK_COOLDOWN_MULTIPLIER = 2.0,
 }
