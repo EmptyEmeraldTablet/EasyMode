@@ -35,6 +35,10 @@ end
 local processedEntities = setmetatable({}, {__mode = "k"})
 local processedBombs = setmetatable({}, {__mode = "k"})
 
+-- DEBUG: Track seen entity types (persist across frames, reset per room)
+local seenEntityTypes = {}
+local seenTearSpawners = {}
+
 -- ============================================================================
 -- Automatic range compensation helper
 -- ============================================================================
@@ -144,9 +148,6 @@ end
 local function onPostUpdate()
     local entities = Isaac.GetRoomEntities()
     
-    -- DEBUG: Track entities we've seen per type
-    local seenTypes = {}
-    
     for _, entity in ipairs(entities) do
         if entity.Valid == false then
             goto continue
@@ -156,9 +157,9 @@ local function onPostUpdate()
         local variant = entity.Variant
         local spawner = entity.SpawnerType
         
-        -- DEBUG: Track entity types (print each new type once per room)
-        if not seenTypes[etype] then
-            seenTypes[etype] = 0
+        -- DEBUG: Track entity types (only print each type once)
+        if not seenEntityTypes[etype] then
+            seenEntityTypes[etype] = true
             print(string.format("[EasyMode DEBUG] New entity type: Type=%d, Variant=%d, Spawner=%d",
                 etype, variant, spawner or -1))
         end
@@ -212,9 +213,13 @@ local function onPostUpdate()
         -- Process enemy tears
         -- ========================================
         if etype == EntityType.ENTITY_TEAR then
-            -- DEBUG: Print ALL tears with their spawner
-            print(string.format("[EasyMode DEBUG] Tear: Type=%d, Variant=%d, Spawner=%d (Player=%d), IsEnemyTear=%s",
-                etype, variant, spawner, EntityType.ENTITY_PLAYER, tostring(spawner ~= EntityType.ENTITY_PLAYER)))
+            -- DEBUG: Print tear spawner info once per spawner type
+            local spawnerKey = spawner or 0
+            if not seenTearSpawners[spawnerKey] then
+                seenTearSpawners[spawnerKey] = true
+                print(string.format("[EasyMode DEBUG] Tear found: Spawner=%d (Player=%d), IsEnemyTear=%s",
+                    spawner, EntityType.ENTITY_PLAYER, tostring(spawner ~= EntityType.ENTITY_PLAYER)))
+            end
             
             -- Skip player tears
             if spawner ~= EntityType.ENTITY_PLAYER then
@@ -265,6 +270,7 @@ end
 function EasyMode:onGameStarted()
     processedEntities = {}
     processedBombs = {}
+    seenEntityTypes = {}  -- Reset debug tracking for new room
     print("[EasyMode] Mod loaded - game difficulty reduced")
     print(string.format("[EasyMode] Enemy: %.0f%%, Projectile: %.0f%%, Tear: %.0f%%, Rock: %.0f%%",
         Config.ENEMY_SPEED_FACTOR * 100,
