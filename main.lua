@@ -7,18 +7,26 @@ local EasyMode = RegisterMod("Easy Mode", 1)
 
 -- Try to load user config, fall back to defaults
 local success, userConfig = pcall(require, "config")
-local Config = success and userConfig or {
-    ENEMY_SPEED_FACTOR = 0.4,
-    BOSS_SPEED_FACTOR = 0.7,
-    PROJECTILE_SPEED_FACTOR = 0.7,
-    TEAR_SPEED_FACTOR = 0.7,
-    ROCK_WAVE_SPEED_FACTOR = 0.6,
-    BOMB_EXPLOSION_DELAY_MULTIPLIER = 1.5,
-    ATTACK_COOLDOWN_MULTIPLIER = 1.5,
-    EXCLUDE_FRIENDLY = true,
-    EXCLUDE_FAMILIARS = true,
-    ENABLE_ATTACK_SLOWDOWN = false
-}
+
+-- Debug: Print config loading status
+local configLoaded = false
+if success and userConfig and type(userConfig) == "table" then
+    Config = userConfig
+    configLoaded = true
+else
+    Config = {
+        ENEMY_SPEED_FACTOR = 0.4,
+        BOSS_SPEED_FACTOR = 0.7,
+        PROJECTILE_SPEED_FACTOR = 0.7,
+        TEAR_SPEED_FACTOR = 0.7,
+        ROCK_WAVE_SPEED_FACTOR = 0.6,
+        BOMB_EXPLOSION_DELAY_MULTIPLIER = 1.5,
+        ATTACK_COOLDOWN_MULTIPLIER = 1.5,
+        EXCLUDE_FRIENDLY = true,
+        EXCLUDE_FAMILIARS = true,
+        ENABLE_ATTACK_SLOWDOWN = false
+    }
+end
 
 -- ============================================================================
 -- Cached entity processing for performance
@@ -206,9 +214,9 @@ local function onPostUpdate()
                     local direction = velocity:Normalized()
                     entity.Velocity = direction * (speed * factor)
                     
-                    -- TEMPORARILY DISABLED: Automatic range compensation
-                    -- local tear = entity:ToTear()
-                    -- applyRangeCompensation(entity, tear, factor)
+                    -- DEBUG: Uncomment to trace tear processing
+                    -- print(string.format("[EasyMode DEBUG] Tear: Spawner=%d, Speed=%.2f, Factor=%.2f, Result=%.2f",
+                    --     entity.SpawnerType, speed, factor, speed * factor))
                 end
             end
         end
@@ -250,15 +258,20 @@ function EasyMode:onGameStarted()
     processedEntities = {}
     processedBombs = {}
     print("[EasyMode] Mod loaded - game difficulty reduced")
-    print(string.format("[EasyMode] Config: Enemy=%.0f%%, Projectile=%.0f%%, Tear=%.0f%%, Rock=%.0f%%",
+    print(string.format("[EasyMode] Enemy: %.0f%%, Projectile: %.0f%%, Tear: %.0f%%, Rock: %.0f%%",
         Config.ENEMY_SPEED_FACTOR * 100,
         Config.PROJECTILE_SPEED_FACTOR * 100,
         Config.TEAR_SPEED_FACTOR * 100,
         Config.ROCK_WAVE_SPEED_FACTOR * 100))
-    if Config.PROJECTILE_SPEED_FACTOR >= 1.0 and Config.TEAR_SPEED_FACTOR >= 1.0 then
+    if configLoaded then
+        print("[EasyMode] Config: LOADED FROM FILE")
+    else
+        print("[EasyMode] Config: USING DEFAULTS (file not found or invalid)")
+    end
+    if Config.TEAR_SPEED_FACTOR >= 1.0 and Config.PROJECTILE_SPEED_FACTOR >= 1.0 then
         print("[EasyMode] NOTE: Projectile/tear speed is 100%% (no slowdown)")
     end
-    print("[EasyMode] Range compensation: DISABLED (temporarily)")
+    print("[EasyMode] Range compensation: DISABLED")
 end
 
 function EasyMode:onGameEnded()
