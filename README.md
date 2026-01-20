@@ -7,9 +7,9 @@
 ### 速度控制
 - **敌人移动速度**: 默认降低 60% (速度因子 0.4)
 - **Boss移动速度**: 默认降低 30% (速度因子 0.7)
-- **敌对投射物速度**: 默认降低 30% (速度因子 0.7，避免悬停)
-- **敌对眼泪速度**: 默认降低 30% (速度因子 0.7)
-- **石刃波/岩石投射物**: 默认降低 40% (速度因子 0.6)
+- **敌对投射物速度**: 默认降低约 5% (速度因子 0.95)，射程减少约 10%
+- **敌对眼泪速度**: 默认降低约 5% (速度因子 0.95)，射程减少约 10%
+- **石刃波/岩石投射物**: 默认降低约 10% (速度因子 0.9)，射程减少约 19%
 
 ### 炸弹时间延长
 - **炸弹爆炸延迟**: 默认延长 50% (1.5倍延时)
@@ -41,29 +41,36 @@ Steam/steamapps/common/The Binding of Isaac Rebirth/mods/EasyModeMod/
 
 ```
 EasyModeMod/
-├── main.lua              # 模组主文件（单一文件结构）
+├── main.lua              # 模组主文件
+├── config.lua            # 用户配置文件（独立管理，git 保护）
+├── config.lua.example    # 默认配置模板
 ├── metadata.xml          # 模组描述文件
 ├── README.md             # 说明文档
+├── CONFIG.md             # 配置详细说明（中文）
+├── CONFIG.en.md          # 配置详细说明（英文）
 └── DEVELOPMENT_NOTES.md  # 开发笔记（问题与解决方案）
 ```
 
 ## 配置说明
 
-在 `main.lua` 中可以修改以下配置：
+配置修改请编辑 `config.lua` 文件（推荐使用 VS Code、Notepad++ 等编辑器）：
 
 ```lua
-EasyMode.Config = {
+return {
     ENEMY_SPEED_FACTOR = 0.4,              -- 敌人速度 (0.4 = 40% 原始速度，即降低60%)
     BOSS_SPEED_FACTOR = 0.7,               -- Boss速度 (0.7 = 70% 原始速度，即降低30%)
-    PROJECTILE_SPEED_FACTOR = 0.7,         -- 投射物速度 (0.7 = 70% 原始速度，即降低30%，避免悬停)
-    TEAR_SPEED_FACTOR = 0.7,               -- 眼泪速度 (0.7 = 70% 原始速度，即降低30%)
-    ROCK_WAVE_SPEED_FACTOR = 0.6,          -- 石刃波/岩石速度 (0.6 = 60% 原始速度，即降低40%)
+    PROJECTILE_SPEED_FACTOR = 0.95,        -- 投射物速度 (0.95 = ~5% 减速，~10% 射程减少)
+    TEAR_SPEED_FACTOR = 0.95,              -- 眼泪速度 (0.95 = ~5% 减速，~10% 射程减少)
+    ROCK_WAVE_SPEED_FACTOR = 0.9,          -- 石刃波/岩石速度 (0.9 = ~10% 减速，~19% 射程减少)
     BOMB_EXPLOSION_DELAY_MULTIPLIER = 1.5, -- 炸弹爆炸延时 (1.5 = 延长50%)
     ATTACK_COOLDOWN_MULTIPLIER = 1.5,      -- 攻击冷却倍数
     EXCLUDE_FRIENDLY = true,               -- 豁免友好单位
-    EXCLUDE_FAMILIARS = true               -- 豁免跟随物
+    EXCLUDE_FAMILIARS = true,              -- 豁免跟随物
+    ENABLE_ATTACK_SLOWDOWN = false         -- 启用攻击减速（实验性）
 }
 ```
+
+> ⚠️ 注意：配置修改后需要**完全重启游戏**才能生效。
 
 ## 技术说明
 
@@ -79,13 +86,15 @@ EasyMode.Config = {
 
 ### 支持的实体类型
 
-| 实体类型 | EntityType | 处理方式 |
-|---------|------------|----------|
-| 敌人NPC | 10-999 | 移动速度减速 |
-| 投射物 | 9 | 速度减速 (PROJECTILE_SPEED_FACTOR) |
-| 眼泪 | 2 (非玩家) | 速度减速 (TEAR_SPEED_FACTOR) |
-| 炸弹 | 4 | 爆炸时间延长 (BOMB_EXPLOSION_DELAY_MULTIPLIER) |
-| 石刃波/岩石 | 9 (特定变体) | 速度减速 (ROCK_WAVE_SPEED_FACTOR) |
+| 实体类型 | EntityType | SpawnerType | 处理方式 |
+|---------|------------|-------------|----------|
+| 普通敌人 | 10-999 | - | 使用 ENEMY_SPEED_FACTOR |
+| Boss | 特殊值 | - | 使用 BOSS_SPEED_FACTOR |
+| 敌人投射物 | 9 | >= 10 | 使用 PROJECTILE_SPEED_FACTOR |
+| 敌人眼泪 | 2 | >= 10 | 使用 TEAR_SPEED_FACTOR |
+| 玩家眼泪 | 2 | 1 | 不处理 |
+| 岩石投射物 | 9 (Variant=1) | - | 使用 ROCK_WAVE_SPEED_FACTOR |
+| 炸弹 | 4 | - | 使用 BOMB_EXPLOSION_DELAY_MULTIPLIER |
 
 ### 性能优化
 
