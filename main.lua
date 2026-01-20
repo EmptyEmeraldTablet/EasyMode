@@ -124,23 +124,15 @@ local function isRockProjectile(entity)
     end
     
     -- Rock projectiles from spiders have specific variants
-    -- Variant 1 is typically the rock projectile
+    -- Variant 1 (PROJECTILE_ROCK) is the rock projectile
     local variant = entity.Variant
     
-    -- Rock projectiles are usually Variant 1 or have specific tear flags
-    -- We identify them by checking if they're not blood/special projectiles
+    -- Only return true for actual rock projectiles
     if variant == ProjectileVariant.PROJECTILE_ROCK then
         return true
     end
     
-    -- Alternative check: rocks have high mass/damage characteristics
-    local projectile = entity:ToProjectile()
-    if projectile then
-        -- Rock projectiles often have different damage values
-        -- This is a heuristic approach
-        return true
-    end
-    
+    -- Other projectile variants are NOT rock projectiles
     return false
 end
 
@@ -217,14 +209,23 @@ local function onPostUpdate()
             -- Skip zero-speed projectiles
             if speed >= 0.1 then
                 local factor = Config.PROJECTILE_SPEED_FACTOR
+                local isRock = false
                 
                 -- Check if it's a rock/wave projectile for different factor
                 if isRockProjectile(entity) then
                     factor = Config.ROCK_WAVE_SPEED_FACTOR
+                    isRock = true
                 end
                 
                 local direction = velocity:Normalized()
                 entity.Velocity = direction * (speed * factor)
+                
+                -- DEBUG: Log projectile factor usage
+                if not seenTearSpawners["_projectile_" .. tostring(spawner)] then
+                    seenTearSpawners["_projectile_" .. tostring(spawner)] = true
+                    print(string.format("[EasyMode DEBUG] Projectile: Spawner=%d, Speed=%.2f, Factor=%.2f (%s), Result=%.2f",
+                        spawner or 0, speed, factor, isRock and "ROCK" or "NORMAL", speed * factor))
+                end
             end
         end
         
