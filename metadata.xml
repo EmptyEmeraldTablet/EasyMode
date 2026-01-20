@@ -7,36 +7,49 @@
 Reduce game difficulty by slowing down enemies and projectiles
 
 ========================================
-中文介绍
+Chinese 中文介绍
 ========================================
 通过降低敌人和投射物速度来减少《以撒的结合：忏悔》游戏难度的模组。
 支持自定义配置，适合想要轻松游玩的玩家。
 
 ========================================
+English 英文介绍
+========================================
+A mod that reduces game difficulty by slowing down enemies and projectiles.
+Features customizable settings for players who want a more relaxed gaming experience.
+
+========================================
 Features 功能特性
 ========================================
 - 速度控制 - 敌人移动速度降低 60%，Boss 降低 30%
+  Speed Control - Enemy movement speed reduced by 60%, Boss by 30%
 - 投射物减速 - 投射物速度降低约 5%，射程减少约 10%
+  Projectile Slowdown - Projectile speed reduced by ~5%, range reduced by ~10%
 - 炸弹延时 - 炸弹爆炸延迟延长 50%
+  Bomb Delay - Bomb explosion delay extended by 50%
 - 自定义配置 - 可调整各项参数，适应不同难度需求
+  Custom Configuration - Adjust parameters for different difficulty levels
 - 智能过滤 - 玩家和友好单位不受影响
+  Smart Filtering - Player and friendly units are unaffected
 
 ========================================
 Configuration 配置
 ========================================
 编辑 config.lua 文件自定义难度。
+Edit config.lua file to customize difficulty.
+
 详细配置说明请见 GitHub Repository:
 https://github.com/EmptyEmeraldTablet/EasyModeMod
 
 ========================================
-Tags
+Tags 标签
 ========================================
 - Gameplay
 - Difficulty
 - Quality of Life
 
 License: MIT - See LICENSE file for details</description>
-    <version>1.0.5</version>
+    <version>1.0.6</version>
     <visibility>public</visibility>
     <tag id="Lua"/>
 </metadata>
