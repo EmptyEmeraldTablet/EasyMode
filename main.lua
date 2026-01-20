@@ -32,93 +32,13 @@ end
 -- Cached entity processing for performance
 -- ============================================================================
 
-local processedEntities = setmetatable({}, {__mode = "k"})
-local processedBombs = setmetatable({}, {__mode = "k"})
 local processedProjectiles = setmetatable({}, {__mode = "k"})
-
--- DEBUG: Track seen entity types (persist across frames, reset per room)
-local seenEntityTypes = {}
-local seenTearSpawners = {}
-
--- DEBUG: Track ALL entities for diagnosis
-local allEntitiesThisFrame = {}
+local processedBombs = setmetatable({}, {__mode = "k"})
 
 -- ============================================================================
--- Automatic range compensation helper
+-- Entity type check functions
 -- ============================================================================
 
-local function applyRangeCompensation(entity, projectile, speedFactor)
-    -- Automatically calculate compensation to maintain range
-    -- Range = Speed × FlightTime
-    -- FlightTime ≈ Height / |FallingSpeed|
-    -- To maintain range when speed is reduced by factor, we need to:
-    -- 1. Increase Height magnitude (more negative)
-    -- 2. Decrease FallingSpeed magnitude (closer to 0)
-    -- This extends flight time proportionally
-    
-    if not speedFactor or speedFactor >= 1.0 then
-        return -- No compensation needed for non-slowed entities
-    end
-    
-    -- Calculate compensation factor (inverse of speed reduction)
-    local compensation = 1.0 / speedFactor
-    
-    -- Apply Height compensation (make it more negative)
-    if entity.Height then
-        entity.Height = entity.Height * compensation
-    end
-    
-    -- Apply FallingSpeed compensation (make it closer to 0, slower fall)
-    if projectile then
-        if projectile.FallingSpeed then
-            projectile.FallingSpeed = projectile.FallingSpeed * compensation
-        end
-        if projectile.FallingAccel then
-            projectile.FallingAccel = projectile.FallingAccel * compensation
-        end
-    end
-end
-
-local function isEnemyNPC(entity)
-    -- Check if entity is an enemy NPC
-    if not entity then return false end
-    
-    -- Try to convert to NPC
-    local npc = entity:ToNPC()
-    if not npc then return false end
-    
-    -- Skip if not a valid enemy type (Types 10-999 are enemies, 1000 is effect)
-    local etype = entity.Type
-    if etype < 10 or etype == 1000 then return false end
-    
-    -- Skip dead entities
-    if npc:IsDead() then return false end
-    
-    return true
-end
-
-local function isEnemyProjectile(entity)
-    -- Check if it's an enemy projectile
-    if not entity or not entity.Type then
-        return false
-    end
-
-    -- Check projectile type
-    if entity.Type == EntityType.ENTITY_PROJECTILE then
-        return true
-    end
-
-    -- Check tear type - player tears have SpawnerType == ENTITY_PLAYER
-    if entity.Type == EntityType.ENTITY_TEAR then
-        if entity.SpawnerType ~= EntityType.ENTITY_PLAYER then
-            return true  -- Enemy tear
-        end
-    end
-
-    return false
-end
-
--- Check if entity is a rock projectile (spawned by spiders)
 local function isRockProjectile(entity)
     if entity.Type ~= EntityType.ENTITY_PROJECTILE then
         return false
@@ -144,41 +64,13 @@ end
 local function onPostUpdate()
     local entities = Isaac.GetRoomEntities()
     
-    -- DEBUG: Count entities per type for diagnosis
-    local entityCounts = {}
-    
     for _, entity in ipairs(entities) do
         if entity.Valid == false then
             goto continue
         end
         
         local etype = entity.Type
-        local variant = entity.Variant
         local spawner = entity.SpawnerType
-        
-        -- DEBUG: Count entities
-        if not entityCounts[etype] then
-            entityCounts[etype] = 0
-        end
-        entityCounts[etype] = entityCounts[etype] + 1
-        
-        -- DEBUG: Track entity types (only print each type once)
-        if not seenEntityTypes[etype] then
-            seenEntityTypes[etype] = true
-            local projectile = entity:ToProjectile()
-            local tear = entity:ToTear()
-            print(string.format("[EasyMode DEBUG] New entity: Type=%d, Variant=%d, Spawner=%d, IsProjectile=%s, IsTear=%s",
-                etype, variant, spawner or -1, tostring(projectile ~= nil), tostring(tear ~= nil)))
-        end
-        
-        -- DEBUG: Check for projectiles with non-player spawners
-        if etype == EntityType.ENTITY_PROJECTILE and spawner and spawner >= 10 then
-            if not seenTearSpawners[spawner] then
-                seenTearSpawners[spawner] = true
-                print(string.format("[EasyMode DEBUG] Enemy projectile detected: Type=%d, Variant=%d, Spawner=%d",
-                    etype, variant, spawner))
-            end
-        end
         
         -- ========================================
         -- Process enemies
@@ -211,21 +103,14 @@ local function onPostUpdate()
             
             local velocity = entity.Velocity
             local speed = velocity:Length()
-            local projectile = entity:ToProjectile()
-            
-            -- DEBUG: Track Height and FallingSpeed changes
-            local heightBefore = entity.Height
-            local fallingBefore = projectile and projectile.FallingSpeed or 0
             
             -- Skip zero-speed projectiles
             if speed >= 0.1 then
                 local factor = Config.PROJECTILE_SPEED_FACTOR
-                local isRock = false
                 
                 -- Check if it's a rock/wave projectile for different factor
                 if isRockProjectile(entity) then
                     factor = Config.ROCK_WAVE_SPEED_FACTOR
-                    isRock = true
                 end
                 
                 local direction = velocity:Normalized()
@@ -233,20 +118,6 @@ local function onPostUpdate()
                 
                 -- Mark as processed
                 processedProjectiles[entity] = true
-                
-                -- DEBUG: Log projectile factor usage
-                local debugKey = "_projectile_" .. (spawner or 0) .. "_" .. tostring(isRock)
-                if not seenTearSpawners[debugKey] then
-                    seenTearSpawners[debugKey] = true
-                    local heightAfter = entity.Height
-                    local fallingAfter = projectile and projectile.FallingSpeed or 0
-                    print(string.format("[EasyMode DEBUG] Projectile: Spawner=%d, Speed=%.2f->%.2f, Factor=%.2f (%s)",
-                        spawner or 0, speed, speed * factor, factor, isRock and "ROCK" or "NORMAL"))
-                    if heightBefore ~= heightAfter or fallingBefore ~= fallingAfter then
-                        print(string.format("  [EasyMode DEBUG] Height: %.2f->%.2f, Falling: %.2f->%.2f",
-                            heightBefore, heightAfter, fallingBefore, fallingAfter))
-                    end
-                end
             end
         end
         
@@ -254,14 +125,6 @@ local function onPostUpdate()
         -- Process enemy tears
         -- ========================================
         if etype == EntityType.ENTITY_TEAR then
-            -- DEBUG: Print tear spawner info once per spawner type
-            local spawnerKey = spawner or 0
-            if not seenTearSpawners[spawnerKey] then
-                seenTearSpawners[spawnerKey] = true
-                print(string.format("[EasyMode DEBUG] Tear found: Spawner=%d (Player=%d), IsEnemyTear=%s",
-                    spawner, EntityType.ENTITY_PLAYER, tostring(spawner ~= EntityType.ENTITY_PLAYER)))
-            end
-            
             -- Skip player tears
             if spawner ~= EntityType.ENTITY_PLAYER then
                 local velocity = entity.Velocity
@@ -296,16 +159,6 @@ local function onPostUpdate()
         ::continue::
     end
     
-    -- DEBUG: Print entity counts once per room
-    if not seenEntityTypes["_counts_printed"] then
-        seenEntityTypes["_counts_printed"] = true
-        local countMsg = "[EasyMode DEBUG] Entity counts: "
-        for etype, count in pairs(entityCounts) do
-            countMsg = countMsg .. string.format("Type%d=%d ", etype, count)
-        end
-        print(countMsg)
-    end
-    
     -- Clean up processed projectiles and bombs that are no longer valid
     for proj, _ in pairs(processedProjectiles) do
         if not proj or not proj.Valid then
@@ -326,10 +179,8 @@ end
 -- ============================================================================
 
 function EasyMode:onGameStarted()
-    processedEntities = {}
+    processedProjectiles = {}
     processedBombs = {}
-    processedProjectiles = {}  -- Reset projectile tracking for new room
-    seenEntityTypes = {}  -- Reset debug tracking for new room
     print("[EasyMode] Mod loaded - game difficulty reduced")
     print(string.format("[EasyMode] Enemy: %.0f%%, Projectile: %.0f%%, Tear: %.0f%%, Rock: %.0f%%",
         Config.ENEMY_SPEED_FACTOR * 100,
@@ -352,9 +203,8 @@ function EasyMode:onGameEnded()
 end
 
 function EasyMode:onPreGameExit(shouldSave)
-    processedEntities = {}
-    processedBombs = {}
     processedProjectiles = {}
+    processedBombs = {}
 end
 
 -- Register mod callbacks
