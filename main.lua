@@ -34,6 +34,7 @@ end
 
 local processedEntities = setmetatable({}, {__mode = "k"})
 local processedBombs = setmetatable({}, {__mode = "k"})
+local processedProjectiles = setmetatable({}, {__mode = "k"})
 
 -- DEBUG: Track seen entity types (persist across frames, reset per room)
 local seenEntityTypes = {}
@@ -203,8 +204,18 @@ local function onPostUpdate()
         -- Process enemy projectiles (tears, rocks, etc.)
         -- ========================================
         if etype == EntityType.ENTITY_PROJECTILE then
+            -- Skip if already processed this frame
+            if processedProjectiles[entity] then
+                goto continue
+            end
+            
             local velocity = entity.Velocity
             local speed = velocity:Length()
+            local projectile = entity:ToProjectile()
+            
+            -- DEBUG: Track Height and FallingSpeed changes
+            local heightBefore = entity.Height
+            local fallingBefore = projectile and projectile.FallingSpeed or 0
             
             -- Skip zero-speed projectiles
             if speed >= 0.1 then
@@ -220,11 +231,21 @@ local function onPostUpdate()
                 local direction = velocity:Normalized()
                 entity.Velocity = direction * (speed * factor)
                 
+                -- Mark as processed
+                processedProjectiles[entity] = true
+                
                 -- DEBUG: Log projectile factor usage
-                if not seenTearSpawners["_projectile_" .. tostring(spawner)] then
-                    seenTearSpawners["_projectile_" .. tostring(spawner)] = true
-                    print(string.format("[EasyMode DEBUG] Projectile: Spawner=%d, Speed=%.2f, Factor=%.2f (%s), Result=%.2f",
-                        spawner or 0, speed, factor, isRock and "ROCK" or "NORMAL", speed * factor))
+                local debugKey = "_projectile_" .. (spawner or 0) .. "_" .. tostring(isRock)
+                if not seenTearSpawners[debugKey] then
+                    seenTearSpawners[debugKey] = true
+                    local heightAfter = entity.Height
+                    local fallingAfter = projectile and projectile.FallingSpeed or 0
+                    print(string.format("[EasyMode DEBUG] Projectile: Spawner=%d, Speed=%.2f->%.2f, Factor=%.2f (%s)",
+                        spawner or 0, speed, speed * factor, factor, isRock and "ROCK" or "NORMAL"))
+                    if heightBefore ~= heightAfter or fallingBefore ~= fallingAfter then
+                        print(string.format("  [EasyMode DEBUG] Height: %.2f->%.2f, Falling: %.2f->%.2f",
+                            heightBefore, heightAfter, fallingBefore, fallingAfter))
+                    end
                 end
             end
         end
@@ -285,7 +306,12 @@ local function onPostUpdate()
         print(countMsg)
     end
     
-    -- Clean up processed bombs that are no longer valid
+    -- Clean up processed projectiles and bombs that are no longer valid
+    for proj, _ in pairs(processedProjectiles) do
+        if not proj or not proj.Valid then
+            processedProjectiles[proj] = nil
+        end
+    end
     for bomb, _ in pairs(processedBombs) do
         if not bomb or not bomb.Valid then
             processedBombs[bomb] = nil
@@ -302,6 +328,7 @@ end
 function EasyMode:onGameStarted()
     processedEntities = {}
     processedBombs = {}
+    processedProjectiles = {}  -- Reset projectile tracking for new room
     seenEntityTypes = {}  -- Reset debug tracking for new room
     print("[EasyMode] Mod loaded - game difficulty reduced")
     print(string.format("[EasyMode] Enemy: %.0f%%, Projectile: %.0f%%, Tear: %.0f%%, Rock: %.0f%%",
@@ -327,6 +354,7 @@ end
 function EasyMode:onPreGameExit(shouldSave)
     processedEntities = {}
     processedBombs = {}
+    processedProjectiles = {}
 end
 
 -- Register mod callbacks
