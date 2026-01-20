@@ -9,16 +9,16 @@ local EasyMode = RegisterMod("Easy Mode", 1)
 -- ============================================================================
 
 EasyMode.Config = {
-    ENEMY_SPEED_FACTOR = 0.4,        -- Enemy move speed (0.4 = 60% reduction)
-    BOSS_SPEED_FACTOR = 0.7,         -- Boss move speed (0.7 = 30% reduction)
-    PROJECTILE_SPEED_FACTOR = 0.7,   -- Enemy projectile speed (30% reduction, avoids stalling)
-    TEAR_SPEED_FACTOR = 0.7,         -- Enemy tear speed (30% reduction)
-    ROCK_WAVE_SPEED_FACTOR = 0.6,    -- Rock/Wave projectile speed (40% reduction)
+    ENEMY_SPEED_FACTOR = 0.4,              -- Enemy move speed (0.4 = 60% reduction)
+    BOSS_SPEED_FACTOR = 0.7,               -- Boss move speed (0.7 = 30% reduction)
+    PROJECTILE_SPEED_FACTOR = 0.7,         -- Enemy projectile speed (0.7 = 30% reduction)
+    TEAR_SPEED_FACTOR = 0.7,               -- Enemy tear speed (0.7 = 30% reduction)
+    ROCK_WAVE_SPEED_FACTOR = 0.6,          -- Rock/Wave projectile speed (0.6 = 40% reduction)
     BOMB_EXPLOSION_DELAY_MULTIPLIER = 1.5, -- Extend bomb explosion time (1.5x)
-    ATTACK_COOLDOWN_MULTIPLIER = 1.5, -- Attack cooldown multiplier
-    EXCLUDE_FRIENDLY = true,         -- Exclude friendly units
-    EXCLUDE_FAMILIARS = true,        -- Exclude familiars
-    ENABLE_ATTACK_SLOWDOWN = false   -- Enable attack slowdown (experimental)
+    ATTACK_COOLDOWN_MULTIPLIER = 1.5,      -- Attack cooldown multiplier
+    EXCLUDE_FRIENDLY = true,               -- Exclude friendly units
+    EXCLUDE_FAMILIARS = true,              -- Exclude familiars
+    ENABLE_ATTACK_SLOWDOWN = false         -- Enable attack slowdown (experimental)
 }
 
 -- ============================================================================
@@ -29,8 +29,40 @@ local processedEntities = setmetatable({}, {__mode = "k"})
 local processedBombs = setmetatable({}, {__mode = "k"})
 
 -- ============================================================================
--- Entity type check functions
+-- Automatic range compensation helper
 -- ============================================================================
+
+local function applyRangeCompensation(entity, projectile, speedFactor)
+    -- Automatically calculate compensation to maintain range
+    -- Range = Speed × FlightTime
+    -- FlightTime ≈ Height / |FallingSpeed|
+    -- To maintain range when speed is reduced by factor, we need to:
+    -- 1. Increase Height magnitude (more negative)
+    -- 2. Decrease FallingSpeed magnitude (closer to 0)
+    -- This extends flight time proportionally
+    
+    if not speedFactor or speedFactor >= 1.0 then
+        return -- No compensation needed for non-slowed entities
+    end
+    
+    -- Calculate compensation factor (inverse of speed reduction)
+    local compensation = 1.0 / speedFactor
+    
+    -- Apply Height compensation (make it more negative)
+    if entity.Height then
+        entity.Height = entity.Height * compensation
+    end
+    
+    -- Apply FallingSpeed compensation (make it closer to 0, slower fall)
+    if projectile then
+        if projectile.FallingSpeed then
+            projectile.FallingSpeed = projectile.FallingSpeed * compensation
+        end
+        if projectile.FallingAccel then
+            projectile.FallingAccel = projectile.FallingAccel * compensation
+        end
+    end
+end
 
 local function isEnemyNPC(entity)
     -- Check if entity is an enemy NPC
@@ -150,6 +182,10 @@ local function onPostUpdate()
                 
                 local direction = velocity:Normalized()
                 entity.Velocity = direction * (speed * factor)
+                
+                -- Automatic range compensation based on speed factor
+                local projectile = entity:ToProjectile()
+                applyRangeCompensation(entity, projectile, factor)
             end
         end
         
@@ -166,6 +202,10 @@ local function onPostUpdate()
                     local factor = EasyMode.Config.TEAR_SPEED_FACTOR
                     local direction = velocity:Normalized()
                     entity.Velocity = direction * (speed * factor)
+                    
+                    -- Automatic range compensation based on speed factor
+                    local tear = entity:ToTear()
+                    applyRangeCompensation(entity, tear, factor)
                 end
             end
         end
@@ -207,10 +247,12 @@ function EasyMode:onGameStarted()
     processedEntities = {}
     processedBombs = {}
     print("[EasyMode] Mod loaded - game difficulty reduced")
-    print(string.format("[EasyMode] Enemy: %.0f%%, Projectile: %.0f%%, Bomb: %.0f%% time",
+    print(string.format("[EasyMode] Enemy: %.0f%%, Projectile: %.0f%%, Tear: %.0f%%, Bomb: %.0f%% time",
         EasyMode.Config.ENEMY_SPEED_FACTOR * 100,
         EasyMode.Config.PROJECTILE_SPEED_FACTOR * 100,
+        EasyMode.Config.TEAR_SPEED_FACTOR * 100,
         EasyMode.Config.BOMB_EXPLOSION_DELAY_MULTIPLIER * 100))
+    print("[EasyMode] Automatic range compensation enabled")
 end
 
 function EasyMode:onGameEnded()
