@@ -3,33 +3,40 @@
     <name>Easy Mode</name>
     <directory>easymodemod</directory>
     <id>3650316373</id>
-    <description>[b][size=6]Easy Mode Mod[/size][/b]
-[size=4]Reduce game difficulty by slowing down enemies and projectiles[/size]
+    <description>Easy Mode Mod
+Reduce game difficulty by slowing down enemies and projectiles
 
-[size=3][b]中文介绍[/b][/size]
-通过降低敌人和投射物速度来减少《以撒的结合：忏悔》游戏难度的模组。支持自定义配置，适合想要轻松游玩的玩家。
+========================================
+中文介绍
+========================================
+通过降低敌人和投射物速度来减少《以撒的结合：忏悔》游戏难度的模组。
+支持自定义配置，适合想要轻松游玩的玩家。
 
-[size=3][b]Features 功能特性[/b][/size]
-[list]
-[*][b]速度控制[/b] - 敌人移动速度降低 60%，Boss 降低 30%
-[*][b]投射物减速[/b] - 投射物速度降低约 5%，射程减少约 10%
-[*][b]炸弹延时[/b] - 炸弹爆炸延迟延长 50%
-[*][b]自定义配置[/b] - 可调整各项参数，适应不同难度需求
-[*][b]智能过滤[/b] - 玩家和友好单位不受影响
-[/list]
+========================================
+Features 功能特性
+========================================
+- 速度控制 - 敌人移动速度降低 60%，Boss 降低 30%
+- 投射物减速 - 投射物速度降低约 5%，射程减少约 10%
+- 炸弹延时 - 炸弹爆炸延迟延长 50%
+- 自定义配置 - 可调整各项参数，适应不同难度需求
+- 智能过滤 - 玩家和友好单位不受影响
 
-[size=3][b]Configuration 配置[/b][/size]
-编辑 [code]config.lua[/code] 文件自定义难度。详细配置说明请见 [url=https://github.com/EmptyEmeraldTablet/EasyModeMod]GitHub Repository[/url]。
+========================================
+Configuration 配置
+========================================
+编辑 config.lua 文件自定义难度。
+详细配置说明请见 GitHub Repository:
+https://github.com/EmptyEmeraldTablet/EasyModeMod
 
-[size=3][b]Tags 标签[/b][/size]
-[list]
-[*]Gameplay
-[*]Difficulty
-[*]Quality of Life
-[/list]
+========================================
+Tags
+========================================
+- Gameplay
+- Difficulty
+- Quality of Life
 
-[size=2][b]License: MIT[/b] - See LICENSE file for details[/size]</description>
-    <version>1.0.4</version>
+License: MIT - See LICENSE file for details</description>
+    <version>1.0.5</version>
     <visibility>public</visibility>
     <tag id="Lua"/>
 </metadata>
