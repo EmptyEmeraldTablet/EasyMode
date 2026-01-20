@@ -2,6 +2,12 @@
     <name>Easy Mode</name>
     <directory>EasyModeMod</directory>
     <id>easymode001</id>
-    <description>通过降低敌人和投射物速度来减少游戏难度的模组</description>
+    <description>通过降低敌人和投射物速度来减少游戏难度的模组。A mod that reduces game difficulty by slowing down enemies and projectiles.</description>
     <version>1.0.1</version>
+    <tag>Gameplay</tag>
+    <tag>Difficulty</tag>
+    <tag>Quality of Life</tag>
+    <author>EmptyEmeraldTablet</author>
+    <website>https://github.com/EmptyEmeraldTablet/EasyModeMod</website>
+    <visibility>public</visibility>
 </metadata>
