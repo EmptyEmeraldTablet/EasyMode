@@ -39,6 +39,9 @@ local processedBombs = setmetatable({}, {__mode = "k"})
 local seenEntityTypes = {}
 local seenTearSpawners = {}
 
+-- DEBUG: Track ALL entities for diagnosis
+local allEntitiesThisFrame = {}
+
 -- ============================================================================
 -- Automatic range compensation helper
 -- ============================================================================
@@ -148,6 +151,9 @@ end
 local function onPostUpdate()
     local entities = Isaac.GetRoomEntities()
     
+    -- DEBUG: Count entities per type for diagnosis
+    local entityCounts = {}
+    
     for _, entity in ipairs(entities) do
         if entity.Valid == false then
             goto continue
@@ -157,11 +163,28 @@ local function onPostUpdate()
         local variant = entity.Variant
         local spawner = entity.SpawnerType
         
+        -- DEBUG: Count entities
+        if not entityCounts[etype] then
+            entityCounts[etype] = 0
+        end
+        entityCounts[etype] = entityCounts[etype] + 1
+        
         -- DEBUG: Track entity types (only print each type once)
         if not seenEntityTypes[etype] then
             seenEntityTypes[etype] = true
-            print(string.format("[EasyMode DEBUG] New entity type: Type=%d, Variant=%d, Spawner=%d",
-                etype, variant, spawner or -1))
+            local projectile = entity:ToProjectile()
+            local tear = entity:ToTear()
+            print(string.format("[EasyMode DEBUG] New entity: Type=%d, Variant=%d, Spawner=%d, IsProjectile=%s, IsTear=%s",
+                etype, variant, spawner or -1, tostring(projectile ~= nil), tostring(tear ~= nil)))
+        end
+        
+        -- DEBUG: Check for projectiles with non-player spawners
+        if etype == EntityType.ENTITY_PROJECTILE and spawner and spawner >= 10 then
+            if not seenTearSpawners[spawner] then
+                seenTearSpawners[spawner] = true
+                print(string.format("[EasyMode DEBUG] Enemy projectile detected: Type=%d, Variant=%d, Spawner=%d",
+                    etype, variant, spawner))
+            end
         end
         
         -- ========================================
@@ -202,10 +225,6 @@ local function onPostUpdate()
                 
                 local direction = velocity:Normalized()
                 entity.Velocity = direction * (speed * factor)
-                
-                -- DEBUG: Log projectile processing
-                -- print(string.format("[EasyMode] Projectile: Type=%d, Var=%d, Speed=%.2f, Factor=%.2f",
-                --     etype, entity.Variant, speed, factor))
             end
         end
         
@@ -255,6 +274,16 @@ local function onPostUpdate()
         ::continue::
     end
     
+    -- DEBUG: Print entity counts once per room
+    if not seenEntityTypes["_counts_printed"] then
+        seenEntityTypes["_counts_printed"] = true
+        local countMsg = "[EasyMode DEBUG] Entity counts: "
+        for etype, count in pairs(entityCounts) do
+            countMsg = countMsg .. string.format("Type%d=%d ", etype, count)
+        end
+        print(countMsg)
+    end
+    
     -- Clean up processed bombs that are no longer valid
     for bomb, _ in pairs(processedBombs) do
         if not bomb or not bomb.Valid then
@@ -263,6 +292,8 @@ local function onPostUpdate()
     end
 end
 
+-- ============================================================================
+-- Mod Callbacks
 -- ============================================================================
 -- Mod Callbacks
 -- ============================================================================
