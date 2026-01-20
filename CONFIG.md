@@ -294,6 +294,54 @@ A: 某些 Boss 有特殊的移动逻辑，可能不受速度因子影响。这�
 - `CONFIG.md` - 本配置文档
 - `CONFIG.en.md` - English documentation
 
+## 进阶玩法：挑战自我 🎮
+
+### 想要更高的难度？没问题！
+
+本模组支持将参数设置为 **大于 1.0** 来实现「困难模式」甚至「自虐模式」！
+
+```lua
+return {
+    ENEMY_SPEED_FACTOR = 1.5,              -- 敌人跑得比你还快！
+    BOSS_SPEED_FACTOR = 2.0,               -- Boss 的速度是正常值的 2 倍！
+    PROJECTILE_SPEED_FACTOR = 1.5,        -- 投射物快得像子弹！
+    BOMB_EXPLOSION_DELAY_MULTIPLIER = 0.5, -- 炸弹爆炸更快了！
+}
+```
+
+### 效果预览
+
+| 参数 | 正常值 | 自虐值 | 效果 |
+|------|--------|--------|------|
+| ENEMY_SPEED_FACTOR | 0.4 | 1.5 | 敌人移动速度提高 275% |
+| BOSS_SPEED_FACTOR | 0.7 | 2.0 | Boss 移动速度提高 186% |
+| PROJECTILE_SPEED_FACTOR | 0.95 | 1.5 | 投射物速度提高 58%，射程增加 125% |
+
+### ⚠️ 温馨提示
+
+> **这不是警告，这是来自开发者的忠告：**
+>
+> - 设置 ENEMY_SPEED_FACTOR > 1 意味着敌人可能比你跑得还快
+> - PROJECTILE_SPEED_FACTOR > 1 会让投射物飞得更远更快
+> - 你可能需要更强的走位技巧和更快的反应速度
+> - 我们不保证你能活着通过第一章
+> - 开发者对任何摔手柄、砸键盘、显示器进水等后果概不负责
+
+### 成就解锁
+
+如果你成功用以下配置通关，请务必联系开发者：
+
+```lua
+ENEMY_SPEED_FACTOR = 3.0
+BOSS_SPEED_FACTOR = 5.0
+PROJECTILE_SPEED_FACTOR = 2.0
+ATTACK_COOLDOWN_MULTIPLIER = 0.1  -- 攻击冷却更短 = 敌人攻击更频繁
+```
+
+**祝你好运！记得多买几张纸巾擦眼泪。** 🧻
+
+---
+
 ## 许可证
 
 本模组遵循 MIT 许可证。

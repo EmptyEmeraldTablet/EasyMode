@@ -294,6 +294,54 @@ The mod scans all entities in the room every frame using the `MC_POST_UPDATE` ca
 - `CONFIG.md` - Chinese configuration documentation
 - `CONFIG.en.md` - This English documentation
 
+## Advanced玩法: Challenge Yourself 🎮
+
+### Want Higher Difficulty? No Problem!
+
+This mod supports setting parameters **greater than 1.0** to achieve "Hard Mode" or even "Masochist Mode"!
+
+```lua
+return {
+    ENEMY_SPEED_FACTOR = 1.5,              -- Enemies run faster than you!
+    BOSS_SPEED_FACTOR = 2.0,               -- Boss moves at 2x normal speed!
+    PROJECTILE_SPEED_FACTOR = 1.5,        -- Projectiles fly like bullets!
+    BOMB_EXPLOSION_DELAY_MULTIPLIER = 0.5, -- Bombs explode faster!
+}
+```
+
+### Effect Preview
+
+| Parameter | Normal Value | Masochist Value | Effect |
+|-----------|--------------|-----------------|--------|
+| ENEMY_SPEED_FACTOR | 0.4 | 1.5 | Enemy speed increased by 275% |
+| BOSS_SPEED_FACTOR | 0.7 | 2.0 | Boss speed increased by 186% |
+| PROJECTILE_SPEED_FACTOR | 0.95 | 1.5 | Projectile speed increased by 58%, range increased by 125% |
+
+### ⚠️ Friendly Reminder
+
+> **This is not a warning, it's advice from the developer:**
+>
+> - Setting ENEMY_SPEED_FACTOR > 1 means enemies might run faster than you
+> - PROJECTILE_SPEED_FACTOR > 1 makes projectiles fly farther and faster
+> - You might need better dodge skills and faster reflexes
+> - We don't guarantee you'll survive Chapter 1
+> - Developer is not responsible for broken controllers, smashed keyboards, or wet monitors
+
+### Achievement Unlocked
+
+If you manage to complete the game with this config, please contact the developer:
+
+```lua
+ENEMY_SPEED_FACTOR = 3.0
+BOSS_SPEED_FACTOR = 5.0
+PROJECTILE_SPEED_FACTOR = 2.0
+ATTACK_COOLDOWN_MULTIPLIER = 0.1  -- Shorter cooldown = More frequent attacks
+```
+
+**Good luck! Don't forget to buy extra tissues for your tears.** 🧻
+
+---
+
 ## License
 
 This mod is licensed under the MIT License.
