@@ -6,8 +6,8 @@
 local EasyMode = RegisterMod("Easy Mode", 1)
 
 -- Try to load user config, fall back to defaults
-local userConfig = pcall(function() return require("config") end)
-local Config = userConfig and require("config") or {
+local success, userConfig = pcall(require, "config")
+local Config = success and userConfig or {
     ENEMY_SPEED_FACTOR = 0.4,
     BOSS_SPEED_FACTOR = 0.7,
     PROJECTILE_SPEED_FACTOR = 0.7,
@@ -19,8 +19,6 @@ local Config = userConfig and require("config") or {
     EXCLUDE_FAMILIARS = true,
     ENABLE_ATTACK_SLOWDOWN = false
 }
-
-Config = Config
 
 -- ============================================================================
 -- Cached entity processing for performance
@@ -184,6 +182,10 @@ local function onPostUpdate()
                 local direction = velocity:Normalized()
                 entity.Velocity = direction * (speed * factor)
                 
+                -- DEBUG: Log projectile processing
+                -- print(string.format("[EasyMode] Projectile: Type=%d, Var=%d, Speed=%.2f, Factor=%.2f",
+                --     etype, entity.Variant, speed, factor))
+                
                 -- TEMPORARILY DISABLED: Automatic range compensation
                 -- local projectile = entity:ToProjectile()
                 -- applyRangeCompensation(entity, projectile, factor)
@@ -248,12 +250,15 @@ function EasyMode:onGameStarted()
     processedEntities = {}
     processedBombs = {}
     print("[EasyMode] Mod loaded - game difficulty reduced")
-    print(string.format("[EasyMode] Enemy: %.0f%%, Projectile: %.0f%%, Tear: %.0f%%, Bomb: %.0f%% time",
+    print(string.format("[EasyMode] Config: Enemy=%.0f%%, Projectile=%.0f%%, Tear=%.0f%%, Rock=%.0f%%",
         Config.ENEMY_SPEED_FACTOR * 100,
         Config.PROJECTILE_SPEED_FACTOR * 100,
         Config.TEAR_SPEED_FACTOR * 100,
-        Config.BOMB_EXPLOSION_DELAY_MULTIPLIER * 100))
-    print("[EasyMode] Automatic range compensation enabled")
+        Config.ROCK_WAVE_SPEED_FACTOR * 100))
+    if Config.PROJECTILE_SPEED_FACTOR >= 1.0 and Config.TEAR_SPEED_FACTOR >= 1.0 then
+        print("[EasyMode] NOTE: Projectile/tear speed is 100%% (no slowdown)")
+    end
+    print("[EasyMode] Range compensation: DISABLED (temporarily)")
 end
 
 function EasyMode:onGameEnded()
