@@ -164,8 +164,9 @@ print("[DEBUG] Enemy speed")
 |------|-------------|
 | 1 | Player |
 | 2 | Tear |
-| 3 | Effect |
-| 4-9 | Various |
+| 3 | Familiar |
+| 4-9 | Various (Bomb, Pickup, Slot, Laser, Knife) |
+| 9 | Projectile |
 | 10-999 | Enemies (NPCs) |
 | 1000 | Effect/Decoration |
 
@@ -400,6 +401,39 @@ if entity.Type == EntityType.ENTITY_PROJECTILE then
     entity.Velocity = direction * (speed * factor)
 end
 ```
+
+---
+
+## 14. Friendly Entity (Familiar/Baby) Projectile Exclusion
+
+### Problem
+Tears and projectiles fired by familiar/baby companions (e.g., Brother Bobby, Lil' Brimstone, familiars spawned by items) were being slowed by the mod because only `EntityType.ENTITY_PLAYER` was excluded from the slowdown logic. Familiar entities have `SpawnerType = EntityType.ENTITY_FAMILIAR` (3), not `EntityType.ENTITY_PLAYER` (1), so they slipped through the filter.
+
+The config flags `EXCLUDE_FAMILIARS` and `EXCLUDE_FRIENDLY` were defined but never wired into the actual processing logic.
+
+### Root Cause
+- `ENTITY_TEAR` check only skipped `spawner == ENTITY_PLAYER`; familiar tears have `spawner == ENTITY_FAMILIAR` (3)
+- `ENTITY_PROJECTILE` check had **no spawner filter at all**
+- `ENTITY_NPC` check had no `EXCLUDE_FRIENDLY` guard for charmed enemies
+
+### Solution
+Introduce a `isFriendlySpawnedEntity(spawnerType)` helper that consolidates all friendly-spawner checks and respects the `EXCLUDE_FAMILIARS` config flag:
+
+```lua
+local function isFriendlySpawnedEntity(spawnerType)
+    if spawnerType == EntityType.ENTITY_PLAYER then
+        return true
+    end
+    if Config.EXCLUDE_FAMILIARS and spawnerType == EntityType.ENTITY_FAMILIAR then
+        return true
+    end
+    return false
+end
+```
+
+Apply this helper in both the `ENTITY_TEAR` and `ENTITY_PROJECTILE` processing blocks.
+
+For charmed/friendly NPCs, use `entity:HasEntityFlags(EntityFlag.FLAG_FRIENDLY)` guarded by `Config.EXCLUDE_FRIENDLY`.
 
 ---
 
