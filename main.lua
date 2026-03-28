@@ -39,6 +39,18 @@ local processedBombs = setmetatable({}, {__mode = "k"})
 -- Entity type check functions
 -- ============================================================================
 
+-- Returns true if the given spawner type belongs to a player-allied entity
+-- (the player themselves or a familiar/baby companion).
+local function isFriendlySpawnedEntity(spawnerType)
+    if spawnerType == EntityType.ENTITY_PLAYER then
+        return true
+    end
+    if Config.EXCLUDE_FAMILIARS and spawnerType == EntityType.ENTITY_FAMILIAR then
+        return true
+    end
+    return false
+end
+
 local function isRockProjectile(entity)
     if entity.Type ~= EntityType.ENTITY_PROJECTILE then
         return false
@@ -77,6 +89,11 @@ local function onPostUpdate()
         -- ========================================
         local npc = entity:ToNPC()
         if npc and etype >= 10 and etype ~= 1000 then
+            -- Skip friendly/charmed NPCs when EXCLUDE_FRIENDLY is enabled
+            if Config.EXCLUDE_FRIENDLY and entity:HasEntityFlags(EntityFlag.FLAG_FRIENDLY) then
+                goto continue
+            end
+
             local velocity = npc.Velocity
             local speed = velocity:Length()
             
@@ -98,6 +115,11 @@ local function onPostUpdate()
         if etype == EntityType.ENTITY_PROJECTILE then
             -- Skip if already processed this frame
             if processedProjectiles[entity] then
+                goto continue
+            end
+            
+            -- Skip projectiles spawned by the player or familiars
+            if isFriendlySpawnedEntity(spawner) then
                 goto continue
             end
             
@@ -125,8 +147,8 @@ local function onPostUpdate()
         -- Process enemy tears
         -- ========================================
         if etype == EntityType.ENTITY_TEAR then
-            -- Skip player tears
-            if spawner ~= EntityType.ENTITY_PLAYER then
+            -- Skip tears spawned by the player or familiars
+            if not isFriendlySpawnedEntity(spawner) then
                 local velocity = entity.Velocity
                 local speed = velocity:Length()
                 
