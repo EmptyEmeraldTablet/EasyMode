@@ -63,14 +63,16 @@ return {
     TEAR_SPEED_FACTOR = 0.95,              -- 眼泪速度 (0.95 = ~5% 减速，~10% 射程减少)
     ROCK_WAVE_SPEED_FACTOR = 0.9,          -- 石刃波/岩石速度 (0.9 = ~10% 减速，~19% 射程减少)
     BOMB_EXPLOSION_DELAY_MULTIPLIER = 1.5, -- 炸弹爆炸延时 (1.5 = 延长50%)
-    ATTACK_COOLDOWN_MULTIPLIER = 1.5,      -- 攻击冷却倍数
     EXCLUDE_FRIENDLY = true,               -- 豁免友好单位
-    EXCLUDE_FAMILIARS = true,              -- 豁免跟随物
-    ENABLE_ATTACK_SLOWDOWN = false         -- 启用攻击减速（实验性）
+    EXCLUDE_FAMILIARS = true               -- 豁免跟随物
 }
 ```
 
 > ⚠️ 注意：配置修改后需要**完全重启游戏**才能生效。
+
+### 游戏内配置（可选）
+
+如果安装了 Mod Config Menu（MCM），会自动在游戏内生成配置页面，可实时调整参数。
 
 ## 技术说明
 

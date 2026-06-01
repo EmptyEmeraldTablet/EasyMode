@@ -7,6 +7,7 @@ local EasyMode = RegisterMod("Easy Mode", 1)
 
 -- Try to load user config, fall back to defaults
 local success, userConfig = pcall(require, "config")
+local MCMLoaded, MCM = pcall(require, "scripts.modconfig")
 
 -- Debug: Print config loading status
 local configLoaded = false
@@ -21,10 +22,8 @@ else
         TEAR_SPEED_FACTOR = 0.7,
         ROCK_WAVE_SPEED_FACTOR = 0.6,
         BOMB_EXPLOSION_DELAY_MULTIPLIER = 1.5,
-        ATTACK_COOLDOWN_MULTIPLIER = 1.5,
         EXCLUDE_FRIENDLY = true,
-        EXCLUDE_FAMILIARS = true,
-        ENABLE_ATTACK_SLOWDOWN = false
+        EXCLUDE_FAMILIARS = true
     }
 end
 
@@ -34,6 +33,7 @@ end
 
 local processedProjectiles = setmetatable({}, {__mode = "k"})
 local processedBombs = setmetatable({}, {__mode = "k"})
+local processedTears = setmetatable({}, {__mode = "k"})
 
 -- ============================================================================
 -- Entity type check functions
@@ -148,7 +148,7 @@ local function onPostUpdate()
         -- ========================================
         if etype == EntityType.ENTITY_TEAR then
             -- Skip tears spawned by the player or familiars
-            if not isFriendlySpawnedEntity(spawner) then
+            if not isFriendlySpawnedEntity(spawner) and not processedTears[entity] then
                 local velocity = entity.Velocity
                 local speed = velocity:Length()
                 
@@ -156,6 +156,7 @@ local function onPostUpdate()
                     local factor = Config.TEAR_SPEED_FACTOR
                     local direction = velocity:Normalized()
                     entity.Velocity = direction * (speed * factor)
+                    processedTears[entity] = true
                 end
             end
         end
@@ -192,6 +193,11 @@ local function onPostUpdate()
             processedBombs[bomb] = nil
         end
     end
+    for tear, _ in pairs(processedTears) do
+        if not tear or not tear.Valid then
+            processedTears[tear] = nil
+        end
+    end
 end
 
 -- ============================================================================
@@ -203,6 +209,7 @@ end
 function EasyMode:onGameStarted()
     processedProjectiles = {}
     processedBombs = {}
+    processedTears = {}
     print("[EasyMode] Mod loaded - game difficulty reduced")
     print(string.format("[EasyMode] Enemy: %.0f%%, Projectile: %.0f%%, Tear: %.0f%%, Rock: %.0f%%",
         Config.ENEMY_SPEED_FACTOR * 100,
@@ -227,6 +234,7 @@ end
 function EasyMode:onPreGameExit(shouldSave)
     processedProjectiles = {}
     processedBombs = {}
+    processedTears = {}
 end
 
 -- Register mod callbacks
@@ -239,5 +247,109 @@ EasyMode:AddCallback(ModCallbacks.MC_PRE_GAME_EXIT, EasyMode.onPreGameExit)
 -- ============================================================================
 
 Isaac.AddCallback(EasyMode, ModCallbacks.MC_POST_UPDATE, onPostUpdate, 0)
+
+-- ============================================================================
+-- Mod Config Menu (MCM) integration
+-- ============================================================================
+
+if MCMLoaded then
+    local category = "Easy Mode"
+    local maxSpeedPercent = 200
+    local maxBombDelayPercent = 300
+    local lastPercentValue = {}
+
+    local function clampInt(value, min, max)
+        if value < min then
+            return min
+        end
+        if value > max then
+            return max
+        end
+        return value
+    end
+
+    local function getPercentValue(key, minPercent, maxPercent)
+        local value = clampInt(math.floor(Config[key] * 100 + 0.5), minPercent, maxPercent)
+        lastPercentValue[key] = value
+        return value
+    end
+
+    local function normalizeWrap(key, currentNum, minPercent, maxPercent)
+        local previous = lastPercentValue[key]
+        if previous == minPercent and currentNum == maxPercent then
+            return minPercent
+        end
+        if previous == maxPercent and currentNum == minPercent then
+            return maxPercent
+        end
+        return currentNum
+    end
+
+    local function addPercentSetting(key, minPercent, maxPercent, stepPercent, label)
+        MCM.AddSetting(category, nil, {
+            Type = MCM.OptionType.NUMBER,
+            CurrentSetting = function()
+                return getPercentValue(key, minPercent, maxPercent)
+            end,
+            Minimum = minPercent,
+            Maximum = maxPercent,
+            ModifyBy = stepPercent,
+            Display = function()
+                return string.format("%s: %d%%", label, getPercentValue(key, minPercent, maxPercent))
+            end,
+            OnChange = function(currentNum)
+                local normalized = normalizeWrap(key, currentNum, minPercent, maxPercent)
+                local clamped = clampInt(normalized, minPercent, maxPercent)
+                Config[key] = clamped / 100
+                lastPercentValue[key] = clamped
+            end
+        })
+    end
+
+    local function addMultiplierPercentSetting(key, minPercent, maxPercent, stepPercent, label)
+        MCM.AddSetting(category, nil, {
+            Type = MCM.OptionType.NUMBER,
+            CurrentSetting = function()
+                return getPercentValue(key, minPercent, maxPercent)
+            end,
+            Minimum = minPercent,
+            Maximum = maxPercent,
+            ModifyBy = stepPercent,
+            Display = function()
+                return string.format("%s: %d%%", label, getPercentValue(key, minPercent, maxPercent))
+            end,
+            OnChange = function(currentNum)
+                local normalized = normalizeWrap(key, currentNum, minPercent, maxPercent)
+                local clamped = clampInt(normalized, minPercent, maxPercent)
+                Config[key] = clamped / 100
+                lastPercentValue[key] = clamped
+            end
+        })
+    end
+
+    local function addBoolSetting(key, label)
+        MCM.AddSetting(category, nil, {
+            Type = MCM.OptionType.BOOLEAN,
+            CurrentSetting = function()
+                return Config[key]
+            end,
+            Display = function()
+                return string.format("%s: %s", label, Config[key] and "Yes" or "No")
+            end,
+            OnChange = function(currentBool)
+                Config[key] = currentBool
+            end
+        })
+    end
+
+    addPercentSetting("ENEMY_SPEED_FACTOR", 0, maxSpeedPercent, 1, "Enemy speed")
+    addPercentSetting("BOSS_SPEED_FACTOR", 0, maxSpeedPercent, 1, "Boss speed")
+    addPercentSetting("PROJECTILE_SPEED_FACTOR", 0, maxSpeedPercent, 1, "Projectile speed")
+    addPercentSetting("TEAR_SPEED_FACTOR", 0, maxSpeedPercent, 1, "Tear speed")
+    addPercentSetting("ROCK_WAVE_SPEED_FACTOR", 0, maxSpeedPercent, 1, "Rock/wave speed")
+    addMultiplierPercentSetting("BOMB_EXPLOSION_DELAY_MULTIPLIER", 100, maxBombDelayPercent, 5, "Bomb delay")
+    addBoolSetting("EXCLUDE_FRIENDLY", "Exclude friendly")
+    addBoolSetting("EXCLUDE_FAMILIARS", "Exclude familiars")
+end
 
 return EasyMode

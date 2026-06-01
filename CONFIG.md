@@ -27,16 +27,18 @@ return {
     TEAR_SPEED_FACTOR = 0.95,              -- 眼泪速度 (同上)
     ROCK_WAVE_SPEED_FACTOR = 0.9,          -- 岩石/波浪速度 (0.9 = ~19% 射程减少)
     BOMB_EXPLOSION_DELAY_MULTIPLIER = 1.5, -- 炸弹爆炸延迟 (1.5x)
-    ATTACK_COOLDOWN_MULTIPLIER = 1.5,      -- 攻击冷却倍率
     EXCLUDE_FRIENDLY = true,               -- 豁免友好单位
     EXCLUDE_FAMILIARS = true,              -- 豁免跟随物
-    ENABLE_ATTACK_SLOWDOWN = false         -- 启用攻击减速（实验性）
 }
 ```
 
 ### 2. 重启游戏
 
 修改 `config.lua` 后需要**完全重启游戏**（不只是重新加载模组）才能生效。
+
+### 游戏内配置（可选）
+
+如果安装了 Mod Config Menu（MCM），会自动在游戏内生成配置页面，可实时调整参数。
 
 ## 物理原理
 
@@ -114,11 +116,6 @@ R = (v² × sin(2θ)) / g
 - **效果**: 炸弹爆炸时间延长 50%
 - **实现方式**: 使用 `EntityBomb:SetExplosionCountdown()`
 
-#### ATTACK_COOLDOWN_MULTIPLIER
-- **默认值**: `1.5`
-- **说明**: 敌人攻击冷却时间倍率
-- **效果**: 敌人攻击间隔延长 50%（实验性功能）
-
 ### 豁免参数
 
 #### EXCLUDE_FRIENDLY
@@ -130,11 +127,6 @@ R = (v² × sin(2θ)) / g
 - **默认值**: `true`
 - **说明**: 是否豁免跟随物
 - **效果**: 玩家的跟随物不会受到影响
-
-#### ENABLE_ATTACK_SLOWDOWN
-- **默认值**: `false`
-- **说明**: 是否启用攻击减速（实验性功能）
-- **注意**: 此功能可能不稳定
 
 ## Git 冲突保护
 
@@ -192,10 +184,8 @@ return {
     TEAR_SPEED_FACTOR = 0.98,
     ROCK_WAVE_SPEED_FACTOR = 0.95,
     BOMB_EXPLOSION_DELAY_MULTIPLIER = 1.2,
-    ATTACK_COOLDOWN_MULTIPLIER = 1.2,
     EXCLUDE_FRIENDLY = true,
     EXCLUDE_FAMILIARS = true,
-    ENABLE_ATTACK_SLOWDOWN = false
 }
 ```
 
@@ -209,10 +199,8 @@ return {
     TEAR_SPEED_FACTOR = 0.95,
     ROCK_WAVE_SPEED_FACTOR = 0.9,
     BOMB_EXPLOSION_DELAY_MULTIPLIER = 1.5,
-    ATTACK_COOLDOWN_MULTIPLIER = 1.5,
     EXCLUDE_FRIENDLY = true,
     EXCLUDE_FAMILIARS = true,
-    ENABLE_ATTACK_SLOWDOWN = false
 }
 ```
 
@@ -226,10 +214,8 @@ return {
     TEAR_SPEED_FACTOR = 0.9,
     ROCK_WAVE_SPEED_FACTOR = 0.85,
     BOMB_EXPLOSION_DELAY_MULTIPLIER = 2.0,
-    ATTACK_COOLDOWN_MULTIPLIER = 2.0,
     EXCLUDE_FRIENDLY = true,
     EXCLUDE_FAMILIARS = true,
-    ENABLE_ATTACK_SLOWDOWN = false
 }
 ```
 
@@ -335,7 +321,6 @@ return {
 ENEMY_SPEED_FACTOR = 3.0
 BOSS_SPEED_FACTOR = 5.0
 PROJECTILE_SPEED_FACTOR = 2.0
-ATTACK_COOLDOWN_MULTIPLIER = 0.1  -- 攻击冷却更短 = 敌人攻击更频繁
 ```
 
 **祝你好运！记得多买几张纸巾擦眼泪。** 🧻

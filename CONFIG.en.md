@@ -27,16 +27,18 @@ return {
     TEAR_SPEED_FACTOR = 0.95,              -- Tear speed (same as projectile)
     ROCK_WAVE_SPEED_FACTOR = 0.9,          -- Rock/Wave speed (~10% reduction, ~19% range reduction)
     BOMB_EXPLOSION_DELAY_MULTIPLIER = 1.5, -- Bomb explosion delay (1.5x)
-    ATTACK_COOLDOWN_MULTIPLIER = 1.5,      -- Attack cooldown multiplier
     EXCLUDE_FRIENDLY = true,               -- Exclude friendly units
     EXCLUDE_FAMILIARS = true,              -- Exclude familiars
-    ENABLE_ATTACK_SLOWDOWN = false         -- Enable attack slowdown (experimental)
 }
 ```
 
 ### 2. Restart Game
 
 After modifying `config.lua`, you need to **completely restart the game** (not just reload the mod).
+
+### In-Game Configuration (Optional)
+
+If Mod Config Menu (MCM) is installed, a settings page will appear in-game for live tuning.
 
 ## Physics: Range and Speed
 
@@ -114,11 +116,6 @@ Adjust based on desired difficulty:
 - **Effect**: Bomb explosion time extended by 50%
 - **Implementation**: Uses `EntityBomb:SetExplosionCountdown()`
 
-#### ATTACK_COOLDOWN_MULTIPLIER
-- **Default**: `1.5`
-- **Description**: Enemy attack cooldown multiplier
-- **Effect**: Enemy attack interval extended by 50% (experimental)
-
 ### Exclusion Parameters
 
 #### EXCLUDE_FRIENDLY
@@ -130,11 +127,6 @@ Adjust based on desired difficulty:
 - **Default**: `true`
 - **Description**: Whether to exclude familiars
 - **Effect**: Player's familiars won't be affected
-
-#### ENABLE_ATTACK_SLOWDOWN
-- **Default**: `false`
-- **Description**: Whether to enable attack slowdown (experimental)
-- **Note**: This feature may be unstable
 
 ## Git Conflict Protection
 
@@ -192,10 +184,8 @@ return {
     TEAR_SPEED_FACTOR = 0.98,
     ROCK_WAVE_SPEED_FACTOR = 0.95,
     BOMB_EXPLOSION_DELAY_MULTIPLIER = 1.2,
-    ATTACK_COOLDOWN_MULTIPLIER = 1.2,
     EXCLUDE_FRIENDLY = true,
     EXCLUDE_FAMILIARS = true,
-    ENABLE_ATTACK_SLOWDOWN = false
 }
 ```
 
@@ -209,10 +199,8 @@ return {
     TEAR_SPEED_FACTOR = 0.95,
     ROCK_WAVE_SPEED_FACTOR = 0.9,
     BOMB_EXPLOSION_DELAY_MULTIPLIER = 1.5,
-    ATTACK_COOLDOWN_MULTIPLIER = 1.5,
     EXCLUDE_FRIENDLY = true,
     EXCLUDE_FAMILIARS = true,
-    ENABLE_ATTACK_SLOWDOWN = false
 }
 ```
 
@@ -226,10 +214,8 @@ return {
     TEAR_SPEED_FACTOR = 0.9,
     ROCK_WAVE_SPEED_FACTOR = 0.85,
     BOMB_EXPLOSION_DELAY_MULTIPLIER = 2.0,
-    ATTACK_COOLDOWN_MULTIPLIER = 2.0,
     EXCLUDE_FRIENDLY = true,
     EXCLUDE_FAMILIARS = true,
-    ENABLE_ATTACK_SLOWDOWN = false
 }
 ```
 
@@ -335,7 +321,6 @@ If you manage to complete the game with this config, please contact the develope
 ENEMY_SPEED_FACTOR = 3.0
 BOSS_SPEED_FACTOR = 5.0
 PROJECTILE_SPEED_FACTOR = 2.0
-ATTACK_COOLDOWN_MULTIPLIER = 0.1  -- Shorter cooldown = More frequent attacks
 ```
 
 **Good luck! Don't forget to buy extra tissues for your tears.** 🧻

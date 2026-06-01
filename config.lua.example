@@ -48,9 +48,6 @@ return {
                                             -- 1.5 = 50% longer delay
                                             -- Range: 1.0 - 2.0
 
-    ATTACK_COOLDOWN_MULTIPLIER = 1.5,      -- Enemy attack cooldown multiplier (experimental)
-                                            -- 1.5 = 50% longer cooldown
-                                            -- Range: 1.0 - 2.0
 
     -- =========================================================================
     -- Exclusion Parameters
@@ -65,9 +62,6 @@ return {
                                             -- true = don't affect familiars
                                             -- false = affect all entities
 
-    ENABLE_ATTACK_SLOWDOWN = false,        -- Enable attack slowdown (experimental)
-                                            -- false = disabled
-                                            -- true = may cause issues
 
     -- =========================================================================
     -- Alternative Presets (uncomment to use):
@@ -80,7 +74,6 @@ return {
     -- TEAR_SPEED_FACTOR = 0.98,
     -- ROCK_WAVE_SPEED_FACTOR = 0.95,
     -- BOMB_EXPLOSION_DELAY_MULTIPLIER = 1.2,
-    -- ATTACK_COOLDOWN_MULTIPLIER = 1.2,
 
     -- Heavy Difficulty (challenge mode):
     -- ENEMY_SPEED_FACTOR = 0.3,
@@ -89,5 +82,4 @@ return {
     -- TEAR_SPEED_FACTOR = 0.9,
     -- ROCK_WAVE_SPEED_FACTOR = 0.85,
     -- BOMB_EXPLOSION_DELAY_MULTIPLIER = 2.0,
-    -- ATTACK_COOLDOWN_MULTIPLIER = 2.0,
 }
