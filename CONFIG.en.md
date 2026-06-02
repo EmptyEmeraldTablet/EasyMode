@@ -1,8 +1,8 @@
-# Easy Mode Mod Configuration Guide
+# Enemy Threat Slowdown Configuration Guide
 
 ## Introduction
 
-Easy Mode Mod is a mod for The Binding of Isaac: Repentance that reduces game difficulty by slowing down enemy attributes.
+Enemy Threat Slowdown is a mod for The Binding of Isaac: Repentance that reduces game difficulty by slowing hostile threats.
 
 ## Configuration Files
 
@@ -39,6 +39,7 @@ After modifying `config.lua`, you need to **completely restart the game** (not j
 ### In-Game Configuration (Optional)
 
 If Mod Config Menu (MCM) is installed, a settings page will appear in-game for live tuning.
+0-1 = slowdown, >1 = speed up (recommended up to 5x).
 
 ## Physics: Range and Speed
 
@@ -331,7 +332,7 @@ PROJECTILE_SPEED_FACTOR = 2.0
 
 ```
 MIT License (MIT)
-Copyright © 2026 Easy Mode Mod Contributors
+Copyright © 2026 Enemy Threat Slowdown Contributors
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to

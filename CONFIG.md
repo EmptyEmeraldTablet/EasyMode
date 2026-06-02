@@ -1,8 +1,8 @@
-# Easy Mode Mod 配置说明
+# Enemy Threat Slowdown 配置说明
 
 ## 简介
 
-Easy Mode Mod 是一个通过降低敌人属性来减少《以撒的结合：忏悔》游戏难度的模组。
+Enemy Threat Slowdown 是一个通过降低敌对威胁来减少《以撒的结合：忏悔》游戏难度的模组。
 
 ## 配置文件
 
@@ -39,6 +39,7 @@ return {
 ### 游戏内配置（可选）
 
 如果安装了 Mod Config Menu（MCM），会自动在游戏内生成配置页面，可实时调整参数。
+倍率 0-1 为减速，>1 为加速，建议不超过 5 倍。
 
 ## 物理原理
 
@@ -331,7 +332,7 @@ PROJECTILE_SPEED_FACTOR = 2.0
 
 ```
 MIT License (MIT)
-Copyright © 2026 Easy Mode Mod Contributors
+Copyright © 2026 Enemy Threat Slowdown Contributors
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to

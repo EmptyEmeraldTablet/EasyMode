@@ -254,7 +254,7 @@ Isaac.AddCallback(EasyMode, ModCallbacks.MC_POST_UPDATE, onPostUpdate, 0)
 
 if MCMLoaded then
     local category = "Easy Mode"
-    local maxSpeedPercent = 200
+    local maxSpeedPercent = 500
     local maxBombDelayPercent = 300
     local lastPercentValue = {}
 

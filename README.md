@@ -1,6 +1,6 @@
-# Easy Mode Mod for The Binding of Isaac: Repentance
+# Enemy Threat Slowdown Mod for The Binding of Isaac: Repentance
 
-一个通过降低敌人属性来减少游戏难度的模组。
+一个通过降低敌对威胁来减少游戏难度的模组。
 
 ## 功能特性
 
@@ -27,7 +27,7 @@
 
 1. 确保已安装 The Binding of Isaac: Repentance
 2. 启用 Steam 创意工坊或手动安装模组
-3. 在游戏模组列表中启用 "Easy Mode"
+3. 在游戏模组列表中启用 "Enemy Threat Slowdown"
 
 ### 手动安装
 
@@ -73,6 +73,7 @@ return {
 ### 游戏内配置（可选）
 
 如果安装了 Mod Config Menu（MCM），会自动在游戏内生成配置页面，可实时调整参数。
+倍率 0-1 为减速，>1 为加速，建议不超过 5 倍。
 
 ## 技术说明
 
@@ -128,7 +129,7 @@ return {
 
 ```
 MIT License (MIT)
-Copyright © 2026 Easy Mode Mod Contributors
+Copyright © 2026 Enemy Threat Slowdown Contributors
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to
